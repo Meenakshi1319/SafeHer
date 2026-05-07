@@ -1,3 +1,6 @@
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth} from "../services/firebase";
 import { useState } from 'react';
 import { router } from 'expo-router';
 import {
@@ -17,13 +20,42 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-function handleSubmit() {
-  if (isLogin) {
-    router.replace('/(tabs)');
-  } else {
-    router.replace('/(tabs)');
-  }
+const handleSubmit = async () => {
+  try {
+    if (isLogin) {
+      // LOGIN
+
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      console.log("✅ Login Success:", userCredential.user);
+
+      alert("Login Successful");
+
+      router.replace("/(tabs)");
+
+    } else {
+  const userCredential = await createUserWithEmailAndPassword(
+    auth,
+    email,
+    password
+  );
+
+  console.log("Signup Success:", userCredential.user);
+
+  alert("Signup Successful");
+
+  router.replace("/(tabs)");
 }
+
+  } catch (error: any) {
+    console.log(error.message);
+    alert(error.message);
+  }
+};
 
   return (
     <SafeAreaView style={styles.container}>
