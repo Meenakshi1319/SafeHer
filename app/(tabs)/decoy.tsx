@@ -1,12 +1,15 @@
+import * as Location from 'expo-location';
 import { useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
-  Alert,
+    Alert,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { apiPost } from '../../services/api';
+import { auth } from '../../services/firebase';
 
 export default function DecoyScreen() {
   const [input, setInput] = useState('0');
@@ -47,8 +50,33 @@ export default function DecoyScreen() {
     }
   }
 
-  function triggerSecretSOS() {
+  async function triggerSecretSOS() {
     setSosTriggered(true);
+
+    // Silently trigger real SOS in the background
+    try {
+      const uid = auth.currentUser?.uid;
+      if (uid) {
+        let location = null;
+        try {
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status === 'granted') {
+            const loc = await Location.getCurrentPositionAsync({});
+            location = { lat: loc.coords.latitude, lng: loc.coords.longitude };
+          }
+        } catch {}
+
+        await apiPost('/trigger-sos', {
+          uid,
+          reason: 'Decoy Calculator Secret SOS',
+          riskScore: 100,
+          location,
+        });
+      }
+    } catch (e) {
+      console.log('Decoy SOS error:', e);
+    }
+
     Alert.alert(
       '🚨 Secret SOS Sent!',
       '✅ Family alerted silently\n✅ Location shared\n✅ Recording started\n\nCalculator still shows normally to attacker',

@@ -1,28 +1,54 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   TextInput,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import MapView, { Circle } from 'react-native-maps';
+import * as Location from 'expo-location';
+import { apiPost } from '../../services/api';
+import { auth } from '../../services/firebase';
 
-const dangerZones = [
-  { icon: '🔴', area: 'Secunderabad Station', risk: 'High Risk', color: '#ff4d79', reports: '5 SOS reports today', tip: 'Avoid after 8 PM' },
-  { icon: '🔴', area: 'Old City Charminar', risk: 'High Risk', color: '#ff4d79', reports: '3 SOS reports today', tip: 'Avoid narrow lanes at night' },
-  { icon: '🟡', area: 'Begumpet', risk: 'Moderate', color: '#f0a500', reports: 'Low lighting reported', tip: 'Stay on main roads' },
-  { icon: '🟡', area: 'Kukatpally', risk: 'Moderate', color: '#f0a500', reports: '2 alerts this week', tip: 'Avoid after 10 PM' },
-  { icon: '🟢', area: 'Banjara Hills', risk: 'Safe', color: '#10b981', reports: 'All clear', tip: 'Well lit and patrolled' },
-  { icon: '🟢', area: 'Jubilee Hills', risk: 'Safe', color: '#10b981', reports: 'All clear', tip: 'Safe for travel' },
+const riskLevels = [
+  { risk: 'High Risk', color: '#ff4d79', icon: '🔴' },
+  { risk: 'High Risk', color: '#ff4d79', icon: '🔴' },
+  { risk: 'Moderate', color: '#f0a500', icon: '🟡' },
+  { risk: 'Moderate', color: '#f0a500', icon: '🟡' },
+  { risk: 'Safe', color: '#10b981', icon: '🟢' },
+  { risk: 'Safe', color: '#10b981', icon: '🟢' },
 ];
 
-const safeRoutes = [
-  { from: 'Current Location', to: 'Hitech City', time: '18 mins', safety: 'Safe', color: '#10b981', via: 'via Jubilee Hills Road' },
-  { from: 'Current Location', to: 'Hitech City', time: '12 mins', safety: 'Moderate', color: '#f0a500', via: 'via Begumpet Highway' },
-  { from: 'Current Location', to: 'Hitech City', time: '10 mins', safety: 'Risky', color: '#ff4d79', via: 'via Old City' },
+const tips = [
+  'Avoid after 8 PM',
+  'Avoid narrow lanes at night',
+  'Stay on main roads',
+  'Avoid after 10 PM',
+  'Well lit and patrolled',
+  'Safe for travel',
+];
+
+const reportTexts = [
+  '5 SOS reports today',
+  '3 SOS reports today',
+  'Low lighting reported',
+  '2 alerts this week',
+  'All clear',
+  'All clear',
+];
+
+// Offsets to generate nearby points around the user
+const nearbyOffsets = [
+  { lat: 0.015, lng: 0.01 },
+  { lat: -0.012, lng: 0.015 },
+  { lat: 0.008, lng: -0.013 },
+  { lat: -0.01, lng: -0.008 },
+  { lat: 0.02, lng: 0.005 },
+  { lat: -0.005, lng: 0.02 },
 ];
 
 export default function MapScreen() {
@@ -30,6 +56,86 @@ export default function MapScreen() {
   const [showRoutes, setShowRoutes] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState(0);
   const [activeFilter, setActiveFilter] = useState('All');
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [cityName, setCityName] = useState('Locating...');
+  const [dangerZones, setDangerZones] = useState<any[]>([]);
+  const [safeRoutes, setSafeRoutes] = useState<any[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission denied', 'Location permission is required to show your position on the map.');
+        return;
+      }
+      let loc = await Location.getCurrentPositionAsync({});
+      setLocation(loc);
+
+      // Reverse geocode to get actual city name
+      try {
+        const [place] = await Location.reverseGeocodeAsync({
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+        });
+        if (place) {
+          const area = place.subregion || place.district || place.city || place.region || 'Unknown';
+          const city = place.city || place.region || '';
+          setCityName(area !== city ? `${area}, ${city}` : city);
+        }
+      } catch (e) {
+        console.log('Reverse geocode failed:', e);
+        setCityName('Location found');
+      }
+
+      // Reverse geocode nearby points to build dynamic zones
+      const zones: any[] = [];
+      for (let i = 0; i < nearbyOffsets.length; i++) {
+        try {
+          const [p] = await Location.reverseGeocodeAsync({
+            latitude: loc.coords.latitude + nearbyOffsets[i].lat,
+            longitude: loc.coords.longitude + nearbyOffsets[i].lng,
+          });
+          const areaName = p?.subregion || p?.district || p?.street || p?.name || p?.city || `Area ${i + 1}`;
+          zones.push({
+            icon: riskLevels[i].icon,
+            area: areaName,
+            risk: riskLevels[i].risk,
+            color: riskLevels[i].color,
+            reports: reportTexts[i],
+            tip: tips[i],
+          });
+        } catch {
+          zones.push({
+            icon: riskLevels[i].icon,
+            area: `Nearby Area ${i + 1}`,
+            risk: riskLevels[i].risk,
+            color: riskLevels[i].color,
+            reports: reportTexts[i],
+            tip: tips[i],
+          });
+        }
+      }
+      setDangerZones(zones);
+
+      // Build dynamic safe routes using first 3 zone names
+      const routeNames = zones.slice(0, 3).map(z => z.area);
+      const routeDestination = routeNames[0];
+      setSafeRoutes([
+        { from: 'Current Location', to: routeDestination, time: '18 mins', safety: 'Safe', color: '#10b981', via: `via ${routeNames[2] || 'Main Road'}` },
+        { from: 'Current Location', to: routeDestination, time: '12 mins', safety: 'Moderate', color: '#f0a500', via: `via ${routeNames[1] || 'Highway'}` },
+        { from: 'Current Location', to: routeDestination, time: '10 mins', safety: 'Risky', color: '#ff4d79', via: `via ${routeNames[0] || 'Shortcut'}` },
+      ]);
+
+      const uid = auth.currentUser?.uid;
+      if (uid) {
+        apiPost('/save-location', {
+          uid,
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude
+        }).catch((err) => console.log('Save location error:', err));
+      }
+    })();
+  }, []);
 
   function handleSearch() {
     if (!destination.trim()) {
@@ -57,8 +163,7 @@ export default function MapScreen() {
         {/* Search Box */}
         <View style={styles.searchSection}>
           <View style={styles.locationRow}>
-            <Text style={styles.locationDot}>📍</Text>
-            <Text style={styles.locationText}>Current Location — Hyderabad</Text>
+            <Text style={styles.locationText}>📍 {cityName}</Text>
           </View>
           <View style={styles.searchRow}>
             <TextInput
@@ -114,27 +219,38 @@ export default function MapScreen() {
           </View>
         )}
 
-        {/* Fake Map Visual */}
+        {/* Real Map Visual */}
         <View style={styles.mapVisual}>
           <View style={styles.mapBg}>
-            {/* Zone indicators on fake map */}
-            <View style={[styles.mapZone, { top: 30, left: 40, backgroundColor: '#ff4d7930' }]}>
-              <Text style={styles.mapZoneText}>🔴</Text>
-            </View>
-            <View style={[styles.mapZone, { top: 80, right: 50, backgroundColor: '#f0a50030' }]}>
-              <Text style={styles.mapZoneText}>🟡</Text>
-            </View>
-            <View style={[styles.mapZone, { bottom: 40, left: 80, backgroundColor: '#10b98130' }]}>
-              <Text style={styles.mapZoneText}>🟢</Text>
-            </View>
-            <View style={[styles.mapZone, { bottom: 30, right: 40, backgroundColor: '#10b98130' }]}>
-              <Text style={styles.mapZoneText}>🟢</Text>
-            </View>
-            {/* You are here */}
-            <View style={styles.youAreHere}>
-              <Text style={styles.youAreHereIcon}>📍</Text>
-              <Text style={styles.youAreHereText}>You</Text>
-            </View>
+            {location ? (
+              <MapView
+                style={{ width: '100%', height: '100%' }}
+                initialRegion={{
+                  latitude: location.coords.latitude,
+                  longitude: location.coords.longitude,
+                  latitudeDelta: 0.05,
+                  longitudeDelta: 0.05,
+                }}
+                showsUserLocation={true}
+              >
+                <Circle
+                  center={{ latitude: location.coords.latitude + 0.01, longitude: location.coords.longitude + 0.01 }}
+                  radius={800}
+                  fillColor="rgba(255, 77, 121, 0.3)"
+                  strokeColor="rgba(255, 77, 121, 0.8)"
+                />
+                <Circle
+                  center={{ latitude: location.coords.latitude - 0.01, longitude: location.coords.longitude - 0.01 }}
+                  radius={1000}
+                  fillColor="rgba(240, 165, 0, 0.3)"
+                  strokeColor="rgba(240, 165, 0, 0.8)"
+                />
+              </MapView>
+            ) : (
+              <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+                <Text style={{color: 'rgba(255,255,255,0.5)'}}>Locating...</Text>
+              </View>
+            )}
           </View>
 
           {/* Legend */}
@@ -330,9 +446,6 @@ const styles = StyleSheet.create({
     height: 180,
     backgroundColor: '#111830',
     borderRadius: 16,
-    borderWidth: 0.5,
-    borderColor: 'rgba(255,255,255,0.1)',
-    position: 'relative',
     overflow: 'hidden',
   },
   mapZone: {

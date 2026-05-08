@@ -1,50 +1,71 @@
-# Welcome to your Expo app 👋
+# SafeHer 🛡️
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A comprehensive, AI-powered women's safety mobile application built with React Native (Expo) and a Node.js/Firebase backend. 
 
-## Get started
+SafeHer is designed to provide real-time protection, emergency escalation, and community support through intelligent sensor detection and dynamic risk scoring.
 
-1. Install dependencies
+## 🚀 Features
 
-   ```bash
-   npm install
-   ```
+*   **🧠 AI Risk Engine:** Continuously evaluates user safety using a multi-factor scoring system (0-100).
+*   **🤖 AI Safety Chatbot:** Gemini-powered assistant providing immediate safety advice, self-defense tips, and emotional support.
+*   **🚨 Smart Escalation System:** Automatically notifies Family (Medium Risk), Volunteers (High Risk), or Police (Critical Risk) based on real-time threat levels.
+*   **🎙️ Voice Keyword Detection:** Detects distress keywords (e.g., "help me", "emergency") locally to auto-trigger SOS.
+*   **📳 Shake & 🔊 Sound Detection:** Hardware sensor integration to detect physical struggles or loud screams.
+*   **🎥 Auto-Evidence Recording:** Automatically starts logging evidence when high-risk thresholds are crossed.
+*   **🗺️ Dynamic Safe Routes:** Provides real-time mapping of nearby danger zones and safe routes based on live GPS tracking.
 
-2. Start the app
+## 🛠️ Technology Stack
 
-   ```bash
-   npx expo start
-   ```
+*   **Frontend:** React Native (Expo), Expo Router, Socket.io-client
+*   **Backend:** Node.js, Express, Socket.io (Real-time events)
+*   **Database & Auth:** Firebase Auth, Firestore, Firebase Admin SDK
+*   **AI Integration:** Google Gemini 2.0 Flash API
 
-In the output, you'll find options to open the app in a
+## 📋 Prerequisites
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+To run this project, you will need:
+*   Node.js (v18+)
+*   Expo CLI (`npm install -g expo-cli`)
+*   Firebase Project with Firestore and Authentication (Email/Password) enabled
+*   Google Gemini API Key
+*   Twilio Account (Optional, for SMS alerts)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## ⚙️ Setup & Installation
 
-## Get a fresh project
-
-When you're ready, run:
-
+### 1. Clone the repository
 ```bash
-npm run reset-project
+git clone https://github.com/yourusername/safeher.git
+cd safeher
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. Backend Setup
+```bash
+cd backend
+npm install
+```
+*   Create a `.env` file in the `backend/` directory:
+    ```env
+    PORT=5000
+    FIRESTORE_PREFER_REST=true
+    GEMINI_API_KEY=your_gemini_api_key
+    ```
+*   Download your Firebase Service Account Key and save it as `backend/serviceAccountKey.json`.
+*   Start the server:
+    ```bash
+    npm start
+    ```
 
-## Learn more
+### 3. Frontend Setup
+Open a new terminal window.
+```bash
+# from the root 'safeher' directory
+npm install
+npx expo start
+```
+*   Scan the QR code with the Expo Go app on your phone.
 
-To learn more about developing your project with Expo, look at the following resources:
+## 🔒 Security & Privacy
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+*   Location data is only transmitted during active sessions or SOS triggers.
+*   Voice detection runs strictly on-device using local keyword matching.
+*   API Keys and Service Accounts are ignored in version control to prevent leaks.

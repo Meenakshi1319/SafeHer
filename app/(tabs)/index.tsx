@@ -1,14 +1,28 @@
-import { useState, useEffect, useRef } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  SafeAreaView,
-  Animated,
-  ScrollView,
+    RecordingPresets,
+    requestRecordingPermissionsAsync,
+    setAudioModeAsync,
+    useAudioRecorder,
+} from 'expo-audio';
+import * as Location from 'expo-location';
+import { useEffect, useRef, useState } from 'react';
+import {
+    Alert,
+    Animated,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { io } from 'socket.io-client';
+import { useShakeDetector } from '../../hooks/useShakeDetector';
+import { BASE_URL, apiPost } from '../../services/api';
+import { auth } from '../../services/firebase';
+
+import { syncRiskScore } from '../../services/shRiskScoreService';
+import VoiceHelper from '../../services/shVoiceTriggerAI';
 
 const evidenceData = [
   { id: '1', type: '🎥', title: 'Video Recording', date: 'Today 10:32 PM', size: '12.4 MB' },
@@ -20,9 +34,48 @@ const evidenceData = [
 export default function SOSScreen() {
   const [sosActive, setSosActive] = useState(false);
   const [showVault, setShowVault] = useState(false);
+  const [recordings, setRecordings] = useState(evidenceData);
+  const [recordingStatus, setRecordingStatus] = useState('');
+  const [shakeProgress, setShakeProgress] = useState(0);
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+
+  useShakeDetector(() => {
+    if (!sosActive) {
+      handleSOS();
+    }
+  }, (count) => setShakeProgress(count), !sosActive);
   const pulse1 = useRef(new Animated.Value(1)).current;
   const pulse2 = useRef(new Animated.Value(1)).current;
   const pulse3 = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+
+    const socket = io(BASE_URL);
+    
+    socket.on('connect', () => {
+      console.log('Socket connected');
+      socket.emit('register', { uid });
+    });
+
+    socket.on('risk_sync', (data) => {
+      console.log('Risk Sync:', data);
+    });
+
+    socket.on('sos_alert', (data) => {
+      console.log('Remote SOS Alert:', data);
+    });
+
+    // Start AI Protection Sensors
+    syncRiskScore();
+    VoiceHelper.startListening();
+
+    return () => {
+      socket.disconnect();
+      VoiceHelper.stopListening();
+    };
+  }, []);
 
   useEffect(() => {
     function animate(anim: Animated.Value, delay: number) {
@@ -45,15 +98,98 @@ export default function SOSScreen() {
     animate(pulse1, 0);
     animate(pulse2, 300);
     animate(pulse3, 600);
-  }, []);
+  }, [pulse1, pulse2, pulse3]);
 
-  function handleSOS() {
+  async function handleSOS() {
+    if (sosActive) return;
     setSosActive(true);
+    setRecordingStatus('🔴 Recording audio & getting location...');
+
     Alert.alert(
       '🚨 SOS Activated!',
-      '✅ Recording started\n✅ Location shared\n✅ Family alerted\n✅ Evidence saved to vault',
-      [{ text: 'Cancel SOS', onPress: () => setSosActive(false) }]
+      '✅ Secret audio recording started\n✅ Location tracked\n✅ Will upload to Firebase Evidence Vault in 10s',
+      [{ text: 'OK' }]
     );
+
+    try {
+      let { status: locStatus } = await Location.requestForegroundPermissionsAsync();
+      let locationObj = null;
+      if (locStatus === 'granted') {
+        locationObj = await Location.getCurrentPositionAsync({});
+      }
+
+      const micStatus = await requestRecordingPermissionsAsync();
+      if (!micStatus.granted) {
+        setSosActive(false);
+        setRecordingStatus('Microphone permission denied');
+        return;
+      }
+
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
+      });
+
+      await audioRecorder.prepareToRecordAsync();
+      audioRecorder.record();
+
+      setTimeout(async () => {
+        await audioRecorder.stop();
+        const uri = audioRecorder.uri;
+        setRecordingStatus('🔄 Uploading evidence to Cloud Vault...');
+
+        let fileName = '';
+        const uid = auth.currentUser?.uid || 'unknown';
+
+        if (uri) {
+          const formData = new FormData();
+          formData.append('uid', uid);
+          formData.append('type', 'audio');
+          formData.append('reason', 'SOS Audio Recording');
+          formData.append('file', {
+            uri,
+            name: `audio_${Date.now()}.m4a`,
+            type: 'audio/m4a',
+          } as any);
+
+          const res = await fetch(`${BASE_URL}/upload-evidence`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'Accept': 'application/json' },
+          });
+          
+          const result = await res.json();
+          if (result.success) {
+            fileName = result.fileName;
+          }
+        }
+
+        await apiPost('/trigger-sos', {
+          uid,
+          reason: 'Emergency Auto-Trigger',
+          riskScore: 100,
+          location: locationObj ? { lat: locationObj.coords.latitude, lng: locationObj.coords.longitude } : null
+        });
+
+        setRecordings(prev => [
+          {
+            id: fileName || Date.now().toString(),
+            type: '🎙️',
+            title: 'Emergency Audio (Backend)',
+            date: new Date().toLocaleTimeString(),
+            size: 'Synced',
+          },
+          ...prev
+        ]);
+
+        setRecordingStatus('✅ Evidence securely saved to Firebase.');
+        setTimeout(() => setRecordingStatus(''), 4000);
+      }, 10000);
+
+    } catch (err) {
+      console.log('Firebase/Audio Error:', err);
+      setRecordingStatus('❌ Error saving evidence');
+    }
   }
 
   return (
@@ -63,7 +199,7 @@ export default function SOSScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Hi, Meenakshi 👋</Text>
+            <Text style={styles.greeting}>Hi, {auth.currentUser?.displayName || auth.currentUser?.email?.split('@')[0] || 'there'} 👋</Text>
             <Text style={styles.logo}>SafeHer</Text>
           </View>
           <View style={styles.safeBadge}>
@@ -74,9 +210,9 @@ export default function SOSScreen() {
 
         {/* SOS Button */}
         <View style={styles.sosWrapper}>
-          <Animated.View style={[styles.ring, styles.ring1, { transform: [{ scale: pulse1 }], opacity: 0.15 }]} />
-          <Animated.View style={[styles.ring, styles.ring2, { transform: [{ scale: pulse2 }], opacity: 0.10 }]} />
-          <Animated.View style={[styles.ring, styles.ring3, { transform: [{ scale: pulse3 }], opacity: 0.06 }]} />
+          <Animated.View style={[styles.ring, styles.ring1, { transform: [{ scale: pulse1 }], opacity: shakeProgress >= 1 ? 0.4 : 0.15, backgroundColor: shakeProgress >= 1 ? '#ff0000' : '#ff4d79' }]} />
+          <Animated.View style={[styles.ring, styles.ring2, { transform: [{ scale: pulse2 }], opacity: shakeProgress >= 2 ? 0.5 : 0.10, backgroundColor: shakeProgress >= 2 ? '#ff0000' : '#ff4d79' }]} />
+          <Animated.View style={[styles.ring, styles.ring3, { transform: [{ scale: pulse3 }], opacity: shakeProgress >= 3 ? 0.6 : 0.06, backgroundColor: shakeProgress >= 3 ? '#ff0000' : '#ff4d79' }]} />
 
           <TouchableOpacity
             style={[styles.sosBtn, sosActive && styles.sosBtnActive]}
@@ -90,7 +226,7 @@ export default function SOSScreen() {
         </View>
 
         <Text style={[styles.hint, sosActive && { color: '#ff4d79' }]}>
-          {sosActive ? '🔴 Sending alerts...' : 'Press for emergency'}
+          {sosActive ? (recordingStatus || '🔴 Sending alerts...') : 'Press for emergency'}
         </Text>
 
         {/* Trigger Chips */}
@@ -134,7 +270,7 @@ export default function SOSScreen() {
               <Text style={styles.vaultIcon}>🔒</Text>
               <View>
                 <Text style={styles.vaultTitle}>Evidence Vault</Text>
-                <Text style={styles.vaultSub}>{evidenceData.length} files encrypted</Text>
+                <Text style={styles.vaultSub}>{recordings.length} files encrypted</Text>
               </View>
             </View>
             <Text style={styles.vaultToggle}>{showVault ? '▲' : '▼'}</Text>
@@ -142,7 +278,7 @@ export default function SOSScreen() {
 
           {showVault && (
             <View style={styles.vaultList}>
-              {evidenceData.map((item) => (
+              {recordings.map((item) => (
                 <View key={item.id} style={styles.vaultItem}>
                   <Text style={styles.vaultItemIcon}>{item.type}</Text>
                   <View style={styles.vaultItemInfo}>

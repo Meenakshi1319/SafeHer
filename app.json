@@ -39,6 +39,34 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow SafeHer to use your location to share with your trusted contacts during an emergency."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow SafeHer to access your camera to record video evidence during an SOS."
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow SafeHer to access your microphone for SOS audio evidence and emergency sound triggers."
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow SafeHer to access your microphone for SOS audio evidence and emergency sound triggers.",
+          "speechRecognitionPermission": "Allow SafeHer to recognize emergency voice triggers.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox"
+          ]
+        }
       ]
     ],
     "experiments": {

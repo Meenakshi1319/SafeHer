@@ -1,10 +1,12 @@
 import { initializeApp } from "firebase/app";
 import {
-  getAuth
+  initializeAuth,
+  getReactNativePersistence
 } from "firebase/auth";
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 import {
-  getFirestore
+  initializeFirestore
 } from "firebase/firestore";
 
 import {
@@ -22,7 +24,7 @@ Project Settings
 
 const firebaseConfig = {
   apiKey: "AIzaSyBkdmUBYWycVkn5pd9XCWSFgYm0uZ1v7HQ",
-  authDomain: "saheher1-514a9.firebaseapp.com",
+  authDomain: "safeher1-514a9.firebaseapp.com",
   projectId: "safeher1-514a9",
   storageBucket: "safeher1-514a9.firebasestorage.app",
   messagingSenderId: "585835226482",
@@ -31,8 +33,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+});
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+});
 export const storage = getStorage(app);
 
 export default app;

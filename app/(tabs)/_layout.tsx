@@ -22,9 +22,17 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
-  name="decoy"
-  options={{ href: null }}
-/>
+        name="decoy"
+        options={{ href: null }}
+      />
+      <Tabs.Screen
+        name="community"
+        options={{ href: null }}
+      />
+      <Tabs.Screen
+        name="explore"
+        options={{ href: null }}
+      />
       <Tabs.Screen
         name="map"
         options={{
@@ -40,10 +48,10 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
-        name="community"
+        name="ai"
         options={{
-          title: 'Community',
-          tabBarIcon: () => <Text style={{ fontSize: 20 }}>👥</Text>,
+          title: 'AI',
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>🤖</Text>,
         }}
       />
       <Tabs.Screen
@@ -53,8 +61,13 @@ export default function Layout() {
           tabBarIcon: () => <Text style={{ fontSize: 20 }}>🧠</Text>,
         }}
       />
-      <Tabs.Screen name="explore" options={{ href: null }} />
-      <Tabs.Screen name="login" options={{ href: null }} />
+      <Tabs.Screen
+        name="contacts"
+        options={{
+          title: 'Contacts',
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>📞</Text>,
+        }}
+      />
     </Tabs>
   );
 }

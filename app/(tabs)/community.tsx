@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const volunteers = [
   { name: 'Priya S.', role: 'College Volunteer', distance: '0.8 km away', rating: '4.9', avatar: '👩', available: true },

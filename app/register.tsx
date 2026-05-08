@@ -1,60 +1,68 @@
-import { sendPasswordResetEmail, signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../services/firebase";
-import { useState } from 'react';
 import { router } from 'expo-router';
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { apiPost } from "../services/api";
+import { auth } from "../services/firebase";
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      alert("Please enter both email and password.");
+  const handleRegister = async () => {
+    if (!name || !email || !password) {
+      alert("Please fill in all fields.");
+      return;
+    }
+    if (password.length < 6) {
+      alert("Password must be at least 6 characters.");
       return;
     }
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log("✅ Login Success:", userCredential.user.email);
+      // Create account with Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Set display name on the Firebase Auth profile
+      await updateProfile(user, { displayName: name });
+
+      // Create Firestore user profile via backend
+      try {
+        await apiPost('/signup', { uid: user.uid, name, email });
+      } catch (profileErr) {
+        // Non-fatal: auth succeeded, profile creation failed
+        console.log('Profile creation warning:', profileErr);
+      }
+
+      console.log("✅ Signup Success:", user.email);
+      alert("Account created successfully!");
       router.replace("/(tabs)");
     } catch (error: any) {
-      console.log("Login error:", error.code, error.message);
-      if (error.code === 'auth/invalid-credential') {
-        alert("Wrong email or password. Please try again.");
-      } else if (error.code === 'auth/user-not-found') {
-        alert("No account found with this email. Please register first.");
-      } else if (error.code === 'auth/too-many-requests') {
-        alert("Too many failed attempts. Please wait a moment and try again.");
+      console.log("Signup error:", error.code, error.message);
+      if (error.code === 'auth/email-already-in-use') {
+        alert("This email is already registered. Please login instead.");
+      } else if (error.code === 'auth/weak-password') {
+        alert("Password is too weak. Use at least 6 characters.");
+      } else if (error.code === 'auth/invalid-email') {
+        alert("Please enter a valid email address.");
       } else {
         alert(error.message);
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleForgotPassword = async () => {
-    if (!email) {
-      alert("Please enter your email address first.");
-      return;
-    }
-    try {
-      await sendPasswordResetEmail(auth, email);
-      alert("Password reset email sent! Check your inbox.");
-    } catch (error: any) {
-      alert(error.message);
     }
   };
 
@@ -68,11 +76,22 @@ export default function LoginScreen() {
         <View style={styles.logoWrapper}>
           <Text style={styles.logoIcon}>🛡️</Text>
           <Text style={styles.logoText}>SafeHer</Text>
-          <Text style={styles.logoSub}>Welcome back</Text>
+          <Text style={styles.logoSub}>Create your account</Text>
         </View>
 
         {/* Form */}
         <View style={styles.form}>
+          <View style={styles.inputWrapper}>
+            <Text style={styles.inputLabel}>Full Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your name"
+              placeholderTextColor="rgba(255,255,255,0.2)"
+              value={name}
+              onChangeText={setName}
+            />
+          </View>
+
           <View style={styles.inputWrapper}>
             <Text style={styles.inputLabel}>Email</Text>
             <TextInput
@@ -90,32 +109,29 @@ export default function LoginScreen() {
             <Text style={styles.inputLabel}>Password</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your password"
+              placeholder="Create a password (min 6 chars)"
               placeholderTextColor="rgba(255,255,255,0.2)"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
             />
-            <TouchableOpacity onPress={handleForgotPassword} style={{ alignSelf: 'flex-end', marginTop: 4 }}>
-              <Text style={{ color: '#e05a7a', fontSize: 12 }}>Forgot Password?</Text>
-            </TouchableOpacity>
           </View>
 
           {/* Submit Button */}
-          <TouchableOpacity style={styles.submitBtn} onPress={handleLogin} disabled={loading}>
+          <TouchableOpacity style={styles.submitBtn} onPress={handleRegister} disabled={loading}>
             {loading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text style={styles.submitText}>Login</Text>
+              <Text style={styles.submitText}>Create Account</Text>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity
             style={{ alignItems: 'center', marginTop: 10 }}
-            onPress={() => router.replace('/register')}
+            onPress={() => router.replace('/login')}
           >
             <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>
-              Do not have an account? <Text style={{ color: '#e05a7a' }}>Register</Text>
+              Already have an account? <Text style={{ color: '#e05a7a' }}>Login</Text>
             </Text>
           </TouchableOpacity>
         </View>

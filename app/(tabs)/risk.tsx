@@ -1,26 +1,66 @@
-import { View, Text, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
-import { useState } from 'react';
-import Slider from '@react-native-community/slider';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { apiGet, apiPost } from '../../services/api';
+import { auth } from '../../services/firebase';
 
 export default function RiskScreen() {
-  const [score, setScore] = useState(62);
+  const [score, setScore] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [history, setHistory] = useState<any[]>([]);
+  const [resetting, setResetting] = useState(false);
 
-  const factors = [
-    { label: 'Voice Stress', value: 70, color: '#e05a7a' },
-    { label: 'Motion Anomaly', value: 55, color: '#f0a500' },
-    { label: 'Location Risk', value: 60, color: '#e05a7a' },
-    { label: 'Night Time', value: 80, color: '#f0a500' },
-    { label: 'Route Deviation', value: 40, color: '#4caf8a' },
-  ];
+  useEffect(() => {
+    fetchRisk();
+  }, []);
+
+  const fetchRisk = async () => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) { setLoading(false); return; }
+    try {
+      const res = await apiGet(`/risk/${uid}`);
+      setScore(res.riskScore || 0);
+
+      const histRes = await apiGet(`/risk/${uid}/history`);
+      setHistory((histRes.history || []).slice(0, 10)); // Last 10 events
+    } catch (err) {
+      console.log('Risk fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReset = async () => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+    setResetting(true);
+    try {
+      await apiPost('/reset-risk', { uid });
+      setScore(0);
+      await fetchRisk();
+    } catch (err) {
+      console.log('Reset error:', err);
+    } finally {
+      setResetting(false);
+    }
+  };
 
   function getRiskLevel() {
-    if (score < 30) return { label: 'Low Risk', color: '#4caf8a' };
-    if (score < 60) return { label: 'Moderate Risk', color: '#f0a500' };
-    if (score < 80) return { label: 'High Risk', color: '#e05a7a' };
-    return { label: 'Critical!', color: '#ff0000' };
+    if (score <= 30) return { label: 'Low Risk', color: '#4caf8a', emoji: '🟢' };
+    if (score <= 60) return { label: 'Moderate Risk', color: '#f0a500', emoji: '🟡' };
+    if (score <= 85) return { label: 'High Risk', color: '#e05a7a', emoji: '🟠' };
+    return { label: 'Critical!', color: '#ff0000', emoji: '🔴' };
   }
 
   const risk = getRiskLevel();
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#e05a7a" style={{ marginTop: 100 }} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -40,61 +80,63 @@ export default function RiskScreen() {
           </View>
         </View>
 
-        {/* Slider */}
-        <View style={styles.sliderWrapper}>
-          <Text style={styles.sliderLabel}>Simulate risk score</Text>
-          <Slider
-            style={{ width: '100%' }}
-            minimumValue={0}
-            maximumValue={100}
-            value={score}
-            onValueChange={(val) => setScore(Math.round(val))}
-            minimumTrackTintColor="#e05a7a"
-            maximumTrackTintColor="rgba(255,255,255,0.1)"
-            thumbTintColor="#e05a7a"
-          />
-        </View>
+        {/* I'm Safe Button */}
+        {score > 0 && (
+          <TouchableOpacity style={styles.safeBtn} onPress={handleReset} disabled={resetting}>
+            {resetting ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.safeBtnText}>I am Safe - Reset Risk</Text>
+            )}
+          </TouchableOpacity>
+        )}
 
-        {/* Factors */}
-        <View style={styles.factorsWrapper}>
-          <Text style={styles.factorsTitle}>RISK FACTORS</Text>
-          {factors.map((f) => (
-            <View key={f.label} style={styles.factorRow}>
-              <View style={styles.factorTop}>
-                <Text style={styles.factorName}>{f.label}</Text>
-                <Text style={[styles.factorVal, { color: f.color }]}>{f.value}%</Text>
-              </View>
-              <View style={styles.barBg}>
-                <View style={[styles.barFill, { width: `${f.value}%`, backgroundColor: f.color }]} />
-              </View>
-            </View>
-          ))}
-        </View>
-
-        {/* Escalation */}
+        {/* Escalation Level */}
         <View style={styles.escalation}>
           <Text style={styles.escTitle}>ESCALATION LEVEL</Text>
           <View style={styles.escRow}>
-            {['👨‍👩‍👧', '🙋', '🚔'].map((icon, i) => (
+            {[
+              { icon: '👨‍👩‍👧', label: 'Family', threshold: 30 },
+              { icon: '🙋', label: 'Volunteers', threshold: 60 },
+              { icon: '🚔', label: 'Police', threshold: 85 },
+            ].map((step, i) => (
               <View key={i} style={styles.escStep}>
                 <View style={[
                   styles.escDot,
-                  { backgroundColor: score > i * 30 ? '#e05a7a' : 'rgba(255,255,255,0.1)' }
+                  { backgroundColor: score > step.threshold ? '#e05a7a' : 'rgba(255,255,255,0.1)' }
                 ]}>
-                  <Text style={{ fontSize: 14 }}>{icon}</Text>
+                  <Text style={{ fontSize: 14 }}>{step.icon}</Text>
                 </View>
-                <Text style={styles.escLabel}>
-                  {i === 0 ? 'Family' : i === 1 ? 'Volunteers' : 'Police'}
-                </Text>
+                <Text style={styles.escLabel}>{step.label}</Text>
                 {i < 2 && (
                   <View style={[
                     styles.escLine,
-                    { backgroundColor: score > (i + 1) * 30 ? '#e05a7a' : 'rgba(255,255,255,0.1)' }
+                    { backgroundColor: score > [60, 85][i] ? '#e05a7a' : 'rgba(255,255,255,0.1)' }
                   ]} />
                 )}
               </View>
             ))}
           </View>
+        </View>
+
+        {/* Risk History */}
+        <View style={styles.historySection}>
+          <Text style={styles.histTitle}>RECENT RISK EVENTS</Text>
+          {history.length === 0 ? (
+            <Text style={styles.emptyText}>No risk events yet. Stay safe! 🛡️</Text>
+          ) : (
+            history.map((h, i) => (
+              <View key={i} style={styles.histCard}>
+                <View style={styles.histInfo}>
+                  <Text style={styles.histReason}>{h.reason || 'Risk event'}</Text>
+                  <Text style={styles.histSource}>{h.source || 'system'} · Score: {h.score}</Text>
+                </View>
+                <Text style={[styles.histDelta, { color: h.delta > 0 ? '#e05a7a' : '#4caf8a' }]}>
+                  {h.delta > 0 ? `+${h.delta}` : h.delta === 0 ? 'Reset' : h.delta}
+                </Text>
+              </View>
+            ))
+          )}
         </View>
 
       </ScrollView>
@@ -103,130 +145,42 @@ export default function RiskScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0a0a12',
-  },
-  header: {
-    padding: 20,
-  },
-  title: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: '500',
-  },
-  subtitle: {
-    color: 'rgba(255,255,255,0.3)',
-    fontSize: 12,
-    marginTop: 4,
-  },
-  circleWrapper: {
-    alignItems: 'center',
-    marginVertical: 20,
-  },
+  container: { flex: 1, backgroundColor: '#0a0a12' },
+  header: { padding: 20 },
+  title: { color: 'white', fontSize: 20, fontWeight: '500' },
+  subtitle: { color: 'rgba(255,255,255,0.3)', fontSize: 12, marginTop: 4 },
+  circleWrapper: { alignItems: 'center', marginVertical: 20 },
   circle: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    borderWidth: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-    elevation: 10,
+    width: 150, height: 150, borderRadius: 75, borderWidth: 6,
+    alignItems: 'center', justifyContent: 'center',
+    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.4, shadowRadius: 20, elevation: 10,
   },
-  scoreNum: {
-    color: 'white',
-    fontSize: 42,
-    fontWeight: '500',
+  scoreNum: { color: 'white', fontSize: 42, fontWeight: '500' },
+  riskLabel: { fontSize: 12, marginTop: 4 },
+  safeBtn: {
+    marginHorizontal: 20, backgroundColor: '#4caf8a', borderRadius: 14,
+    padding: 16, alignItems: 'center', marginBottom: 16,
   },
-  riskLabel: {
-    fontSize: 12,
-    marginTop: 4,
-  },
-  sliderWrapper: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  sliderLabel: {
-    color: 'rgba(255,255,255,0.3)',
-    fontSize: 11,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  factorsWrapper: {
-    paddingHorizontal: 20,
-    gap: 14,
-  },
-  factorsTitle: {
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: 12,
-    letterSpacing: 1,
-  },
-  factorRow: {
-    gap: 6,
-  },
-  factorTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  factorName: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 13,
-  },
-  factorVal: {
-    fontSize: 13,
-  },
-  barBg: {
-    height: 5,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 4,
-  },
-  barFill: {
-    height: 5,
-    borderRadius: 4,
-  },
+  safeBtnText: { color: 'white', fontSize: 15, fontWeight: '600' },
   escalation: {
-    margin: 20,
-    backgroundColor: '#1a0a0f',
-    borderWidth: 0.5,
-    borderColor: 'rgba(224,90,122,0.2)',
-    borderRadius: 14,
-    padding: 16,
+    margin: 20, marginTop: 4, backgroundColor: '#1a0a0f',
+    borderWidth: 0.5, borderColor: 'rgba(224,90,122,0.2)', borderRadius: 14, padding: 16,
   },
-  escTitle: {
-    color: '#e05a7a',
-    fontSize: 11,
-    letterSpacing: 1,
-    marginBottom: 12,
+  escTitle: { color: '#e05a7a', fontSize: 11, letterSpacing: 1, marginBottom: 12 },
+  escRow: { flexDirection: 'row', alignItems: 'center' },
+  escStep: { alignItems: 'center', flex: 1, position: 'relative' },
+  escDot: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  escLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 10, marginTop: 4 },
+  escLine: { position: 'absolute', height: 1, width: '100%', top: 18, left: '50%' },
+  historySection: { paddingHorizontal: 20, gap: 10, paddingBottom: 30 },
+  histTitle: { color: 'rgba(255,255,255,0.4)', fontSize: 11, letterSpacing: 1, marginBottom: 4 },
+  emptyText: { color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginTop: 20 },
+  histCard: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12, padding: 14, gap: 12,
   },
-  escRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  escStep: {
-    alignItems: 'center',
-    flex: 1,
-    position: 'relative',
-  },
-  escDot: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  escLabel: {
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: 10,
-    marginTop: 4,
-  },
-  escLine: {
-    position: 'absolute',
-    height: 1,
-    width: '100%',
-    top: 18,
-    left: '50%',
-  },
+  histInfo: { flex: 1, gap: 2 },
+  histReason: { color: 'white', fontSize: 13, fontWeight: '500' },
+  histSource: { color: 'rgba(255,255,255,0.35)', fontSize: 11 },
+  histDelta: { fontSize: 16, fontWeight: '700' },
 });
