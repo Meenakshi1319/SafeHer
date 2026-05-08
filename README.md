@@ -1,71 +1,93 @@
-# SafeHer 🛡️
+# SAFEHER – AI Integrated Women Safety System 🛡️
 
-A comprehensive, AI-powered women's safety mobile application built with React Native (Expo) and a Node.js/Firebase backend. 
+SafeHer is an advanced AI-powered women's safety mobile application designed to provide real-time protection and intelligent emergency response. By leveraging Artificial Intelligence, GPS tracking, and sensor-based detection, SafeHer ensures safety even when a user cannot manually trigger an SOS.
 
-SafeHer is designed to provide real-time protection, emergency escalation, and community support through intelligent sensor detection and dynamic risk scoring.
+---
 
-## 🚀 Features
+## 📖 Table of Contents
+* [Problem Statement](#-problem-statement)
+* [Proposed Solution](#-proposed-solution)
+* [Key Features](#-key-features)
+* [System Architecture](#-system-architecture)
+* [Tech Stack](#-tech-stack)
+* [Future Enhancements](#-future-enhancements)
+* [The Team](#-the-team)
 
-*   **🧠 AI Risk Engine:** Continuously evaluates user safety using a multi-factor scoring system (0-100).
-*   **🤖 AI Safety Chatbot:** Gemini-powered assistant providing immediate safety advice, self-defense tips, and emotional support.
-*   **🚨 Smart Escalation System:** Automatically notifies Family (Medium Risk), Volunteers (High Risk), or Police (Critical Risk) based on real-time threat levels.
-*   **🎙️ Voice Keyword Detection:** Detects distress keywords (e.g., "help me", "emergency") locally to auto-trigger SOS.
-*   **📳 Shake & 🔊 Sound Detection:** Hardware sensor integration to detect physical struggles or loud screams.
-*   **🎥 Auto-Evidence Recording:** Automatically starts logging evidence when high-risk thresholds are crossed.
-*   **🗺️ Dynamic Safe Routes:** Provides real-time mapping of nearby danger zones and safe routes based on live GPS tracking.
+---
 
-## 🛠️ Technology Stack
+## ⚠️ Problem Statement
+Most existing safety apps rely on **manual SOS activation**. In high-stress situations, victims may:
+* Experience extreme panic.
+* Be unable to reach or unlock their phone.
+* Face internet dependency or weak evidence protection.
 
-*   **Frontend:** React Native (Expo), Expo Router, Socket.io-client
-*   **Backend:** Node.js, Express, Socket.io (Real-time events)
-*   **Database & Auth:** Firebase Auth, Firestore, Firebase Admin SDK
-*   **AI Integration:** Google Gemini 2.0 Flash API
+## 💡 Proposed Solution
+SafeHer provides an automated safety ecosystem that monitors:
+* **Voice Stress:** Detects panic and specific keywords.
+* **Environmental Sound:** Identifies screams and abnormal distress sounds.
+* **Physical Motion:** Uses accelerometers for shake and fall detection.
+* **Smart Risk Scoring:** Generates a dynamic danger level to trigger emergency modes automatically.
 
-## 📋 Prerequisites
+---
 
-To run this project, you will need:
-*   Node.js (v18+)
-*   Expo CLI (`npm install -g expo-cli`)
-*   Firebase Project with Firestore and Authentication (Email/Password) enabled
-*   Google Gemini API Key
-*   Twilio Account (Optional, for SMS alerts)
+## ✨ Key Features
 
-## ⚙️ Setup & Installation
+### 🧠 AI-Based Detection
+* **Voice recognition:** Detects keywords like *"Help me"*, *"Save me"*, or *"Emergency"*.
+* **Sound Analysis:** Identifies loud screams and environmental distress.
+* **Shake Detection:** Uses Expo sensors to detect sudden movements or struggles.
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/yourusername/safeher.git
-cd safeher
-```
+### 📍 Live Tracking & Community
+* **Real-time GPS:** Integrated with Google Maps for precise tracking.
+* **Risk Zone Detection:** Alerts users when entering high-risk areas.
+* **Volunteer Support:** Notifies nearby community members for immediate help.
 
-### 2. Backend Setup
-```bash
-cd backend
-npm install
-```
-*   Create a `.env` file in the `backend/` directory:
-    ```env
-    PORT=5000
-    FIRESTORE_PREFER_REST=true
-    GEMINI_API_KEY=your_gemini_api_key
-    ```
-*   Download your Firebase Service Account Key and save it as `backend/serviceAccountKey.json`.
-*   Start the server:
-    ```bash
-    npm start
-    ```
+### 🛡️ Evidence Protection
+* **Silent Recording:** Automatically triggers audio/video recording during emergencies.
+* **Cloud Backup:** Securely stores evidence in Firebase/Cloud Storage to prevent tampering.
 
-### 3. Frontend Setup
-Open a new terminal window.
-```bash
-# from the root 'safeher' directory
-npm install
-npx expo start
-```
-*   Scan the QR code with the Expo Go app on your phone.
+---
 
-## 🔒 Security & Privacy
+## 🏗 System Architecture
 
-*   Location data is only transmitted during active sessions or SOS triggers.
-*   Voice detection runs strictly on-device using local keyword matching.
-*   API Keys and Service Accounts are ignored in version control to prevent leaks.
+
+1. **Frontend:** React Native handles the UI and real-time sensor monitoring.
+2. **Backend:** Node.js processes complex triggers and API requests.
+3. **Database:** Firebase manages authentication, real-time data, and push notifications.
+4. **AI Modules:** Dedicated logic for analyzing voice, sound, and motion patterns.
+
+---
+
+## 🛠 Tech Stack
+
+| Technology | Purpose |
+| :--- | :--- |
+| **React Native** | Cross-platform Mobile Application |
+| **Firebase** | Authentication, Real-time Database & Cloud Messaging |
+| **Node.js** | Backend APIs & Logic |
+| **Google Maps API** | Live Location Tracking |
+| **Speech Recognition**| AI Voice Detection |
+| **Expo Sensors** | Accelerometer & Shake Detection |
+| **Cloud Storage** | Secure Evidence Backup |
+
+---
+
+## 🚀 Future Enhancements
+- [ ] **AI Emotion Detection:** Understanding fear levels through vocal tone.
+- [ ] **Wearable Integration:** Smartwatch support for heart rate monitoring.
+- [ ] **Blockchain Evidence:** Decentralized security for legal evidence.
+- [ ] **Predictive Heatmaps:** Showing danger zones based on historical data.
+
+---
+
+## 👥 The Team
+* **Jahnavi** – Project Manager & Testing
+* **Meenakshi** – UI/UX Developer
+* **Mithra** – Backend Developer
+* **Karthik** – Integration Developer
+* **Dheemanth** – AI Developer
+
+---
+
+## 📄 Conclusion
+SafeHer is more than an alert app; it is a **predictive ecosystem**. By removing the requirement for manual intervention, we bridge the gap between a threat occurring and help arriving.
