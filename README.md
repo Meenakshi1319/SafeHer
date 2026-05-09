@@ -84,7 +84,7 @@ SafeHer provides an automated safety ecosystem that monitors:
 * **Jahnavi** – Project Manager & Testing - 
 * **Meenakshi** – UI/UX Developer
 * **Mithra** – Backend Developer
-* **Karthik** – Integration Developer 
+* **Karthik** – Integration Developer - https://github.com/karthikeyagod
 * **Dheemanth** – AI Developer - https://github.com/DHEEMANTH241106
 
 ---
