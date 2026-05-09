@@ -1,0 +1,48 @@
+import { Camera } from 'react-native-vision-camera';
+
+let cameraRef = null;
+
+export const setCameraRef = (ref) => {
+  cameraRef = ref;
+};
+
+export const startAutoRecording = async () => {
+  try {
+    if (!cameraRef) {
+      console.log("Camera not initialized");
+      return;
+    }
+
+    console.log("Starting Automatic Video Recording...");
+
+    await cameraRef.startRecording({
+      flash: 'off',
+
+      onRecordingFinished: (video) => {
+        console.log("Video Saved:", video.path);
+
+        // Future:
+        // Upload to backend
+        // Save to Firebase Storage
+      },
+
+      onRecordingError: (error) => {
+        console.log(error);
+      },
+    });
+
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const stopAutoRecording = async () => {
+  try {
+    if (cameraRef) {
+      await cameraRef.stopRecording();
+      console.log("Recording Stopped");
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};

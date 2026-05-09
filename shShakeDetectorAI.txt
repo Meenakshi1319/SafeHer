@@ -1,0 +1,18 @@
+import RNShake from "react-native-shake";
+import { addRiskScore } from "./RiskScoreService";
+
+let subscription = null;
+
+export const startShakeDetection = () => {
+  subscription = RNShake.addListener(() => {
+    console.log("📱 Phone Shake Detected");
+
+    addRiskScore(20, "Phone Shake Detected");
+  });
+};
+
+export const stopShakeDetection = () => {
+  if (subscription) {
+    subscription.remove();
+  }
+};

@@ -1,0 +1,40 @@
+import Voice from "@react-native-voice/voice";
+import { addRiskScore } from "./RiskScoreService";
+
+class VoiceHelper {
+  constructor() {
+    Voice.onSpeechResults = this.onSpeechResults;
+    Voice.onSpeechError = this.onSpeechError;
+  }
+
+  async startListening() {
+    try {
+      console.log("🎤 Voice Listening Started");
+
+      await Voice.start("en-US");
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  onSpeechResults = (result) => {
+    const text = result.value[0].toLowerCase();
+
+    console.log("Detected Voice:", text);
+
+    if (
+      text.includes("help me") ||
+      text.includes("save me") ||
+      text.includes("emergency")
+    ) {
+      addRiskScore(40, "Emergency Voice Trigger");
+    }
+  };
+
+  onSpeechError = (error) => {
+    console.log(error);
+  };
+}
+
+export default new VoiceHelper();

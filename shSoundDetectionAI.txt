@@ -1,0 +1,22 @@
+import SoundLevel from "react-native-sound-level";
+import { addRiskScore } from "./RiskScoreService";
+
+export const startSoundDetection = () => {
+  try {
+    SoundLevel.start();
+
+    console.log("🔊 Sound Detection Started");
+
+    SoundLevel.onNewFrame = (data) => {
+      console.log("Sound Level:", data.value);
+
+      // Adjust threshold if needed
+      if (data.value > -5) {
+        addRiskScore(25, "Loud Sound / Scream Detected");
+      }
+    };
+
+  } catch (error) {
+    console.log(error);
+  }
+};
