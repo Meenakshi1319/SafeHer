@@ -81,7 +81,7 @@ SafeHer provides an automated safety ecosystem that monitors:
 ---
 
 ## 👥 The Team
-* **Jahnavi** – Project Manager & Testing - 
+* **Jahnavi** – Project Manager & Testing - https://github.com/Jahnavi55561
 * **Meenakshi** – UI/UX Developer - https://github.com/Meenakshi1319
 * **Mithra** – Backend Developer - https://github.com/Mithra65
 * **Karthik** – Integration Developer - https://github.com/karthikeyagod
