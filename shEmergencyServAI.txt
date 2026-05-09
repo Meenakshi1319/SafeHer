@@ -1,0 +1,26 @@
+export const triggerSOS = async (reason) => {
+  try {
+    console.log("🚨 Sending SOS Alert...");
+
+    const response = await fetch(
+      "http://YOUR_BACKEND_IP:5000/trigger-sos",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          reason: reason,
+          timestamp: new Date(),
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    console.log("SOS Response:", data);
+
+  } catch (error) {
+    console.log("SOS Error:", error);
+  }
+};

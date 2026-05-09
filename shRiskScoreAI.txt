@@ -1,0 +1,79 @@
+import { triggerSOS } from "./EmergencyService";
+import { startAutoRecording } from "./AutoVideoRecorder";
+
+let riskScore = 0;
+
+/*
+Multi-Level Risk Score System
+
+0 – 30   → Low Risk → No Alert
+31 – 60  → Medium Risk → Family + Trusted Contacts
+61 – 85  → High Risk → Family + Volunteers + NGO
+86 – 100 → Very High Risk → Police + Emergency Services
+*/
+
+export const addRiskScore = async (value, reason) => {
+  try {
+    riskScore += value;
+
+    // Prevent score > 100
+    if (riskScore > 100) {
+      riskScore = 100;
+    }
+
+    console.log("================================");
+    console.log(`Risk Added: +${value}`);
+    console.log(`Reason: ${reason}`);
+    console.log(`Current Risk Score: ${riskScore}`);
+    console.log("================================");
+
+    // LOW RISK
+    if (riskScore >= 0 && riskScore <= 30) {
+      console.log("🟢 LOW RISK");
+      console.log("No Alert Needed");
+    }
+
+    // MEDIUM RISK
+    else if (riskScore >= 31 && riskScore <= 60) {
+      console.log("🟡 MEDIUM RISK");
+
+      await triggerSOS(
+        "Medium Risk Alert → Notify Family + Trusted Contacts"
+      );
+    }
+
+    // HIGH RISK
+    else if (riskScore >= 61 && riskScore <= 85) {
+      console.log("🟠 HIGH RISK");
+
+      await startAutoRecording();
+
+      await triggerSOS(
+        "High Risk Alert → Notify Family + Volunteers + NGO"
+      );
+    }
+
+    // VERY HIGH RISK
+    else if (riskScore >= 86 && riskScore <= 100) {
+      console.log("🔴 VERY HIGH RISK");
+
+      await startAutoRecording();
+
+      await triggerSOS(
+        "Very High Risk Alert → Police + Emergency Services + All Contacts"
+      );
+    }
+
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const resetRiskScore = () => {
+  riskScore = 0;
+  console.log("Risk Score Reset");
+};
+
+export const getCurrentRiskScore = () => {
+  return riskScore;
+};
