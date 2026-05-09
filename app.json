@@ -9,10 +9,18 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "config": {
+        "googleMapsApiKey": "AIzaSyCqWdL_SlUKLfnA9MJkPpFiTJB_hSDiPF0"
+      }
     },
     "android": {
       "package": "com.safeher.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCqWdL_SlUKLfnA9MJkPpFiTJB_hSDiPF0"
+        }
+      },
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -43,29 +51,8 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow SafeHer to use your location to share with your trusted contacts during an emergency."
-        }
-      ],
-      [
-        "expo-camera",
-        {
-          "cameraPermission": "Allow SafeHer to access your camera to record video evidence during an SOS."
-        }
-      ],
-      [
-        "expo-audio",
-        {
-          "microphonePermission": "Allow SafeHer to access your microphone for SOS audio evidence and emergency sound triggers."
-        }
-      ],
-      [
-        "expo-speech-recognition",
-        {
-          "microphonePermission": "Allow SafeHer to access your microphone for SOS audio evidence and emergency sound triggers.",
-          "speechRecognitionPermission": "Allow SafeHer to recognize emergency voice triggers.",
-          "androidSpeechServicePackages": [
-            "com.google.android.googlequicksearchbox"
-          ]
+          "locationAlwaysAndWhenInUsePermission": "SafeHer needs your location to show safe routes and share it during emergencies.",
+          "locationWhenInUsePermission": "SafeHer needs your location to show safe routes and share it during emergencies."
         }
       ]
     ],

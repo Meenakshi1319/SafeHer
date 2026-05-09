@@ -30,20 +30,18 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
+# local env files — never commit real secrets
 .env
-
-# backend secrets and runtime output
-backend/.env
-backend/serviceAccountKey.json
-backend/logs/
-backend/uploads/
+.env.local
+.env*.local
 
 # typescript
 *.tsbuildinfo
 
 app-example
+
+# Old nested duplicate project folder
+SafeHer/
 
 # generated native folders
 /ios

@@ -1,93 +1,50 @@
-# SAFEHER – AI Integrated Women Safety System 🛡️
+# Welcome to your Expo app 👋
 
-SafeHer is an advanced AI-powered women's safety mobile application designed to provide real-time protection and intelligent emergency response. By leveraging Artificial Intelligence, GPS tracking, and sensor-based detection, SafeHer ensures safety even when a user cannot manually trigger an SOS.
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
----
+## Get started
 
-## 📖 Table of Contents
-* [Problem Statement](#-problem-statement)
-* [Proposed Solution](#-proposed-solution)
-* [Key Features](#-key-features)
-* [System Architecture](#-system-architecture)
-* [Tech Stack](#-tech-stack)
-* [Future Enhancements](#-future-enhancements)
-* [The Team](#-the-team)
+1. Install dependencies
 
----
+   ```bash
+   npm install
+   ```
 
-## ⚠️ Problem Statement
-Most existing safety apps rely on **manual SOS activation**. In high-stress situations, victims may:
-* Experience extreme panic.
-* Be unable to reach or unlock their phone.
-* Face internet dependency or weak evidence protection.
+2. Start the app
 
-## 💡 Proposed Solution
-SafeHer provides an automated safety ecosystem that monitors:
-* **Voice Stress:** Detects panic and specific keywords.
-* **Environmental Sound:** Identifies screams and abnormal distress sounds.
-* **Physical Motion:** Uses accelerometers for shake and fall detection.
-* **Smart Risk Scoring:** Generates a dynamic danger level to trigger emergency modes automatically.
+   ```bash
+   npx expo start
+   ```
 
----
+In the output, you'll find options to open the app in a
 
-## ✨ Key Features
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-### 🧠 AI-Based Detection
-* **Voice recognition:** Detects keywords like *"Help me"*, *"Save me"*, or *"Emergency"*.
-* **Sound Analysis:** Identifies loud screams and environmental distress.
-* **Shake Detection:** Uses Expo sensors to detect sudden movements or struggles.
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-### 📍 Live Tracking & Community
-* **Real-time GPS:** Integrated with Google Maps for precise tracking.
-* **Risk Zone Detection:** Alerts users when entering high-risk areas.
-* **Volunteer Support:** Notifies nearby community members for immediate help.
+## Get a fresh project
 
-### 🛡️ Evidence Protection
-* **Silent Recording:** Automatically triggers audio/video recording during emergencies.
-* **Cloud Backup:** Securely stores evidence in Firebase/Cloud Storage to prevent tampering.
+When you're ready, run:
 
----
+```bash
+npm run reset-project
+```
 
-## 🏗 System Architecture
+This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
+## Learn more
 
-1. **Frontend:** React Native handles the UI and real-time sensor monitoring.
-2. **Backend:** Node.js processes complex triggers and API requests.
-3. **Database:** Firebase manages authentication, real-time data, and push notifications.
-4. **AI Modules:** Dedicated logic for analyzing voice, sound, and motion patterns.
+To learn more about developing your project with Expo, look at the following resources:
 
----
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-## 🛠 Tech Stack
+## Join the community
 
-| Technology | Purpose |
-| :--- | :--- |
-| **React Native** | Cross-platform Mobile Application |
-| **Firebase** | Authentication, Real-time Database & Cloud Messaging |
-| **Node.js** | Backend APIs & Logic |
-| **Google Maps API** | Live Location Tracking |
-| **Speech Recognition**| AI Voice Detection |
-| **Expo Sensors** | Accelerometer & Shake Detection |
-| **Cloud Storage** | Secure Evidence Backup |
+Join our community of developers creating universal apps.
 
----
-
-## 🚀 Future Enhancements
-- [ ] **AI Emotion Detection:** Understanding fear levels through vocal tone.
-- [ ] **Wearable Integration:** Smartwatch support for heart rate monitoring.
-- [ ] **Blockchain Evidence:** Decentralized security for legal evidence.
-- [ ] **Predictive Heatmaps:** Showing danger zones based on historical data.
-
----
-
-## 👥 The Team
-* **Jahnavi** – Project Manager & Testing
-* **Meenakshi** – UI/UX Developer
-* **Mithra** – Backend Developer
-* **Karthik** – Integration Developer
-* **Dheemanth** – AI Developer
-
----
-
-## 📄 Conclusion
-SafeHer is more than an alert app; it is a **predictive ecosystem**. By removing the requirement for manual intervention, we bridge the gap between a threat occurring and help arriving.
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
