@@ -262,7 +262,26 @@ export default function SOSScreen() {
               key={t.label}
               style={styles.chip}
               activeOpacity={0.5}
-              onPress={() => Alert.alert(t.label + ' Trigger', t.msg)}
+              onPress={() => {
+                if (t.label === 'Voice') {
+                  // Test voice recognition
+                  const isAvailable = VoiceHelper.isAvailable();
+                  const status = VoiceHelper.listening ? 'Active' : 'Inactive';
+                  Alert.alert(
+                    '🎤 Voice Recognition Status',
+                    `Available: ${isAvailable ? 'Yes' : 'No'}\nStatus: ${status}\n\nTrigger words:\n• "Help me"\n• "Save me"\n• "Emergency"\n• "Bachao"\n• "Stop"\n• "Please help"\n\nTry saying one of these phrases!`,
+                    [
+                      { text: 'Restart', onPress: () => {
+                        VoiceHelper.stopListening();
+                        setTimeout(() => VoiceHelper.startListening(), 500);
+                      }},
+                      { text: 'OK' }
+                    ]
+                  );
+                } else {
+                  Alert.alert(t.label + ' Trigger', t.msg);
+                }
+              }}
             >
               <Text style={styles.chipIcon}>{t.icon}</Text>
               <Text style={styles.chipLabel}>{t.label}</Text>

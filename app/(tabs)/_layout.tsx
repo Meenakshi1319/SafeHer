@@ -27,6 +27,7 @@ export default function Layout() {
       <Tabs.Screen name="explore"   options={{ href: null }} />
       <Tabs.Screen name="checkin"   options={{ href: null }} />
       <Tabs.Screen name="tracking"  options={{ href: null }} />
+      <Tabs.Screen name="voice-test" options={{ href: null }} />
 
       <Tabs.Screen
         name="map"

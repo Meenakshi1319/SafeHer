@@ -146,6 +146,13 @@ export default function ProfileScreen() {
         <Text style={styles.sectionTitle}>APP</Text>
         <View style={styles.card}>
           <SettingRow
+            icon="🎤"
+            label="Voice Test"
+            onPress={() => router.push('/(tabs)/voice-test' as any)}
+            right={<Text style={styles.chevron}>›</Text>}
+          />
+          <View style={styles.divider} />
+          <SettingRow
             icon="🔐"
             label="Decoy Mode"
             onPress={() => router.push('/(tabs)/decoy')}
