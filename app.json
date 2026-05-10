@@ -31,12 +31,7 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
-      ],
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyCqWdL_SlUKLfnA9MJkPpFiTJB_hSDiPF0"
-        }
-      }
+      ]
     },
     "web": {
       "output": "static",
