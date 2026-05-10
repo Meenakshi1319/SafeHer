@@ -1,10 +1,48 @@
-# SafeHer - Women's Safety Application
+# SafeHer - AI Integrated Women's Safety Application 🛡️
 
-SafeHer is a comprehensive mobile safety application designed to enhance personal security through intelligent monitoring, emergency response, and community features.
+SafeHer is an advanced AI-powered women's safety mobile application designed to provide real-time protection and intelligent emergency response. By leveraging Artificial Intelligence, GPS tracking, and sensor-based detection, SafeHer ensures safety even when a user cannot manually trigger an SOS.
 
-## 🌟 Features
+## 📖 Table of Contents
+* [Problem Statement](#-problem-statement)
+* [Proposed Solution](#-proposed-solution)
+* [Key Features](#-key-features)
+* [Quick Start](#-quick-start)
+* [Project Structure](#-project-structure)
+* [System Architecture](#-system-architecture)
+* [Tech Stack](#-tech-stack)
+* [Security & Privacy](#-security--privacy)
+* [Testing](#-testing)
+* [Documentation](#-documentation)
+* [The Team](#-the-team)
+* [Future Enhancements](#-future-enhancements)
+* [Contributing](#-contributing)
+* [License](#-license)
 
-### Core Safety Features
+---
+
+## ⚠️ Problem Statement
+Most existing safety apps rely on **manual SOS activation**. In high-stress situations, victims may:
+* Experience extreme panic
+* Be unable to reach or unlock their phone
+* Face internet dependency or weak evidence protection
+
+## 💡 Proposed Solution
+SafeHer provides an automated safety ecosystem that monitors:
+* **Voice Stress:** Detects panic and specific keywords
+* **Environmental Sound:** Identifies screams and abnormal distress sounds
+* **Physical Motion:** Uses accelerometers for shake and fall detection
+* **Smart Risk Scoring:** Generates a dynamic danger level to trigger emergency modes automatically
+
+---
+
+## ✨ Key Features
+
+### 🧠 AI-Based Detection
+* **Voice recognition:** Detects keywords like *"Help me"*, *"Save me"*, or *"Emergency"*
+* **Sound Analysis:** Identifies loud screams and environmental distress
+* **Shake Detection:** Uses Expo sensors to detect sudden movements or struggles
+
+### 🚨 Core Safety Features
 - **Real-time Risk Assessment**: AI-powered risk scoring based on location, time, and environmental factors
 - **Emergency SOS**: Quick access emergency alert system with escalation protocols
 - **Live Location Tracking**: Share your location with trusted contacts
@@ -12,16 +50,17 @@ SafeHer is a comprehensive mobile safety application designed to enhance persona
 - **Fake Call Feature**: Decoy call interface for uncomfortable situations
 - **Audio/Video Recording**: Automatic recording during high-risk situations
 
-### AI-Powered Features
-- **Voice Trigger Detection**: Activate emergency features with voice commands
-- **Shake Detection**: Motion-based emergency activation
-- **Sound Analysis**: Detect distress sounds and potential threats
-- **Intelligent Alerts**: Context-aware notifications to emergency contacts
+### 📍 Live Tracking & Community
+* **Real-time GPS:** Integrated with Google Maps for precise tracking
+* **Risk Zone Detection:** Alerts users when entering high-risk areas
+* **Community Safety Map**: View and report safe/unsafe areas
+* **Volunteer Support:** Notifies nearby community members for immediate help
 
-### Community & Support
-- **Emergency Contacts Management**: Organize and prioritize your safety network
-- **Community Safety Map**: View and report safe/unsafe areas
-- **Resource Directory**: Access to local emergency services and support organizations
+### 🛡️ Evidence Protection
+* **Silent Recording:** Automatically triggers audio/video recording during emergencies
+* **Cloud Backup:** Securely stores evidence in Firebase/Cloud Storage to prevent tampering
+
+---
 
 ## 🚀 Quick Start
 
@@ -36,7 +75,7 @@ SafeHer is a comprehensive mobile safety application designed to enhance persona
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/Meenakshi1319/SafeHer.git
    cd SafeHer
    ```
 
@@ -78,11 +117,49 @@ SafeHer/
 │   ├── middleware/          # Express middleware
 │   └── __tests__/           # Backend tests
 ├── components/              # Reusable React components
-├── services/                # Frontend service layer
 ├── hooks/                   # Custom React hooks
 ├── constants/               # App constants and configuration
 └── assets/                  # Images, sounds, and static files
 ```
+
+## 🏗️ System Architecture
+
+### Architecture Layers
+1. **Frontend:** React Native handles the UI and real-time sensor monitoring
+2. **Backend:** Node.js processes complex triggers and API requests
+3. **Database:** Firebase manages authentication, real-time data, and push notifications
+4. **AI Modules:** Dedicated logic for analyzing voice, sound, and motion patterns
+
+For detailed architecture documentation, see [ARCHITECTURE.md](./ARCHITECTURE.md)
+
+### Framework Architecture
+SafeHer follows a **feature-based modular architecture** for scalability and maintainability:
+- **Feature Modules**: Emergency, Tracking, AI, Contacts, Recording, Decoy, Check-in, Community
+- **Shared Components**: Reusable UI components and utilities
+- **Core Infrastructure**: API client, Firebase, WebSocket, Storage
+
+See [FRAMEWORK_ARCHITECTURE.md](./FRAMEWORK_ARCHITECTURE.md) for complete details.
+
+---
+
+## 🛠️ Tech Stack
+
+| Technology | Purpose |
+| :--- | :--- |
+| **React Native + Expo** | Cross-platform Mobile Application |
+| **TypeScript** | Type-safe development |
+| **Firebase** | Authentication, Real-time Database & Cloud Messaging |
+| **Node.js + Express** | Backend APIs & Business Logic |
+| **Google Maps API** | Live Location Tracking |
+| **Google Gemini AI** | AI-powered risk assessment |
+| **OpenAI API** | Advanced AI features |
+| **Speech Recognition** | AI Voice Detection |
+| **Expo Sensors** | Accelerometer & Shake Detection |
+| **Twilio** | SMS and call notifications |
+| **Socket.io** | Real-time WebSocket communication |
+| **Cloud Storage** | Secure Evidence Backup |
+
+---
 
 ## 🔒 Security & Privacy
 
@@ -91,6 +168,8 @@ SafeHer/
 - User location data is only shared with explicitly authorized contacts
 - Audio/video recordings are stored securely with user consent
 - See [ARCHITECTURE.md](./ARCHITECTURE.md) for security details
+
+---
 
 ## 🧪 Testing
 
@@ -105,37 +184,57 @@ npm run test:coverage
 
 See [TESTING.md](./TESTING.md) for comprehensive testing documentation.
 
+---
+
 ## 📚 Documentation
 
-- [Setup Guide](./SETUP.md) - Detailed installation and configuration
-- [API Documentation](./API_DOCUMENTATION.md) - Backend API reference
-- [Architecture Overview](./ARCHITECTURE.md) - System design and architecture
-- [Contributing Guide](./CONTRIBUTING.md) - How to contribute to the project
+### Getting Started
+- [SETUP.md](./SETUP.md) - Detailed installation and configuration
+- [GITHUB_READY_SUMMARY.md](./GITHUB_READY_SUMMARY.md) - GitHub upload guide
 
-## 🛠️ Technology Stack
+### Framework & Architecture
+- [FRAMEWORK_SUMMARY.md](./FRAMEWORK_SUMMARY.md) - Framework overview
+- [FRAMEWORK_QUICKSTART.md](./FRAMEWORK_QUICKSTART.md) - Quick start guide
+- [FRAMEWORK_ARCHITECTURE.md](./FRAMEWORK_ARCHITECTURE.md) - Complete architecture
+- [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) - Migration instructions
+- [docs/FRAMEWORK_VISUAL_GUIDE.md](./docs/FRAMEWORK_VISUAL_GUIDE.md) - Visual diagrams
 
-### Frontend
-- React Native with Expo
-- TypeScript
-- Expo Router for navigation
-- Firebase for authentication and storage
-- Socket.io for real-time communication
+### Technical Documentation
+- [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) - Backend API reference
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - System design and architecture
+- [TESTING.md](./TESTING.md) - Testing guide
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
 
-### Backend
-- Node.js with Express
-- Firebase Admin SDK
-- Google Gemini AI
-- OpenAI API
-- Twilio for SMS/calls
-- Socket.io for WebSocket connections
+---
+
+## � The Team
+* **Jahnavi** – Project Manager & Testing - https://github.com/Jahnavi55561
+* **Meenakshi** – UI/UX Developer - https://github.com/Meenakshi1319
+* **Mithra** – Backend Developer - https://github.com/Mithra65
+* **Karthik** – Integration Developer - https://github.com/karthikeyagod
+* **Dheemanth** – AI Developer - https://github.com/DHEEMANTH241106
+
+---
+
+## 🚀 Future Enhancements
+- [ ] **AI Emotion Detection:** Understanding fear levels through vocal tone
+- [ ] **Wearable Integration:** Smartwatch support for heart rate monitoring
+- [ ] **Blockchain Evidence:** Decentralized security for legal evidence
+- [ ] **Predictive Heatmaps:** Showing danger zones based on historical data
+
+---
 
 ## 🤝 Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
+---
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+
+---
 
 ## ⚠️ Important Notes
 
@@ -144,6 +243,8 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 - **Testing**: Always test on physical devices for location and sensor features
 - **Production**: Use environment-specific configurations for deployment
 
+---
+
 ## 🆘 Support
 
 For issues, questions, or feature requests:
@@ -151,9 +252,13 @@ For issues, questions, or feature requests:
 - Check existing documentation
 - Review the troubleshooting section in [SETUP.md](./SETUP.md)
 
-## 🙏 Acknowledgments
+---
 
-Built with the goal of making the world safer for everyone.
+## � Conclusion
+
+SafeHer is more than an alert app; it is a **predictive ecosystem**. By removing the requirement for manual intervention, we bridge the gap between a threat occurring and help arriving.
+
+Built with the goal of making the world safer for everyone. 💜
 
 ---
 
