@@ -209,10 +209,17 @@ export default function MapScreen() {
             ))}
             <TouchableOpacity
               style={styles.startBtn}
-              onPress={() => Alert.alert(
-                '🗺️ Navigation Started',
-                `Taking the ${safeRoutes[selectedRoute].safety} route via ${safeRoutes[selectedRoute].via}\n\nEstimated time: ${safeRoutes[selectedRoute].time}`
-              )}
+              onPress={() => {
+                const currentRoute = safeRoutes[selectedRoute];
+                if (!currentRoute) {
+                  Alert.alert('Route unavailable', 'Routes are still loading. Please try again.');
+                  return;
+                }
+                Alert.alert(
+                  '🗺️ Navigation Started',
+                  `Taking the ${currentRoute.safety} route via ${currentRoute.via}\n\nEstimated time: ${currentRoute.time}`
+                );
+              }}
             >
               <Text style={styles.startBtnText}>▶ Start Safe Navigation</Text>
             </TouchableOpacity>

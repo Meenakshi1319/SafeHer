@@ -34,10 +34,11 @@ async function runTests() {
   // TEST 1: Signup
   try {
     console.log('1️⃣  POST /signup — Create test account...');
+    const testUidGenerated = `test_${Date.now()}`;
     const res = await post('/signup', {
+      uid: testUidGenerated,
       name: 'Test User',
       email: testEmail,
-      password: 'test123456',
       phone: '',
     });
     if (res.success && res.uid) {
@@ -159,7 +160,7 @@ async function runTests() {
       source: 'manual',
     });
     if (res.success) {
-      console.log(`   ✅ PASS — Risk score: ${res.score}\n`);
+      console.log(`   ✅ PASS — Risk score: ${res.riskScore}\n`);
       passed++;
     } else {
       console.log(`   ❌ FAIL — ${res.message}\n`);
@@ -174,8 +175,8 @@ async function runTests() {
   try {
     console.log('8️⃣  GET /risk/:uid — Get current risk...');
     const res = await get(`/risk/${testUid}`);
-    if (res.success && res.score >= 0) {
-      console.log(`   ✅ PASS — Score: ${res.score}, Level: ${res.riskLevel}\n`);
+    if (res.success && res.riskScore >= 0) {
+      console.log(`   ✅ PASS — Score: ${res.riskScore}, Level: ${res.riskLevel}\n`);
       passed++;
     } else {
       console.log(`   ❌ FAIL — ${JSON.stringify(res)}\n`);
@@ -191,7 +192,7 @@ async function runTests() {
     console.log('9️⃣  POST /sensor/shake — Shake event...');
     const res = await post('/sensor/shake', { uid: testUid });
     if (res.success) {
-      console.log(`   ✅ PASS — Shake registered, risk: ${res.score}\n`);
+      console.log(`   ✅ PASS — Shake registered, risk: ${res.riskScore}\n`);
       passed++;
     } else {
       console.log(`   ❌ FAIL — ${res.message}\n`);

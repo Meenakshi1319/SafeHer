@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import {
     ActivityIndicator,
     KeyboardAvoidingView,
@@ -19,6 +20,7 @@ export default function RegisterScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
@@ -107,14 +109,19 @@ export default function RegisterScreen() {
 
           <View style={styles.inputWrapper}>
             <Text style={styles.inputLabel}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Create a password (min 6 chars)"
-              placeholderTextColor="rgba(255,255,255,0.2)"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Create a password (min 6 chars)"
+                placeholderTextColor="rgba(255,255,255,0.2)"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                <Ionicons name={showPassword ? "eye-off" : "eye"} size={20} color="rgba(255,255,255,0.5)" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Submit Button */}
@@ -158,6 +165,23 @@ const styles = StyleSheet.create({
     padding: 14,
     color: 'white',
     fontSize: 14,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 14,
+    color: 'white',
+    fontSize: 14,
+  },
+  eyeIcon: {
+    padding: 14,
   },
   submitBtn: {
     backgroundColor: '#e05a7a',

@@ -41,7 +41,7 @@ export default function DecoyScreen() {
           .replace('×', '*')
           .replace('÷', '/')
           .replace('−', '-');
-        setInput(String(eval(expr)));
+        setInput(String(evaluateExpression(expr)));
       } catch {
         setInput('Error');
       }
@@ -197,6 +197,60 @@ export default function DecoyScreen() {
 
     </SafeAreaView>
   );
+}
+
+function evaluateExpression(expression: string): number {
+  if (!/^[0-9+\-*/%.() ]+$/.test(expression)) {
+    throw new Error('Invalid chars');
+  }
+
+  const normalized = expression.replace(/\s+/g, '');
+  const tokens = normalized.match(/(\d+(\.\d+)?)|[()+\-*/%]/g);
+  if (!tokens) throw new Error('Invalid expression');
+
+  const values: number[] = [];
+  const ops: string[] = [];
+  const precedence: Record<string, number> = { '+': 1, '-': 1, '*': 2, '/': 2, '%': 2 };
+
+  const applyOp = () => {
+    const op = ops.pop();
+    const b = values.pop();
+    const a = values.pop();
+    if (!op || a == null || b == null) throw new Error('Bad expression');
+    if (op === '+') values.push(a + b);
+    if (op === '-') values.push(a - b);
+    if (op === '*') values.push(a * b);
+    if (op === '/') values.push(a / b);
+    if (op === '%') values.push(a % b);
+  };
+
+  for (const token of tokens) {
+    if (!Number.isNaN(Number(token))) {
+      values.push(Number(token));
+      continue;
+    }
+    if (token === '(') {
+      ops.push(token);
+      continue;
+    }
+    if (token === ')') {
+      while (ops.length && ops[ops.length - 1] !== '(') applyOp();
+      if (ops.pop() !== '(') throw new Error('Mismatched parentheses');
+      continue;
+    }
+    while (
+      ops.length &&
+      ops[ops.length - 1] !== '(' &&
+      precedence[ops[ops.length - 1]] >= precedence[token]
+    ) {
+      applyOp();
+    }
+    ops.push(token);
+  }
+
+  while (ops.length) applyOp();
+  if (values.length !== 1 || !Number.isFinite(values[0])) throw new Error('Invalid result');
+  return values[0];
 }
 
 const styles = StyleSheet.create({

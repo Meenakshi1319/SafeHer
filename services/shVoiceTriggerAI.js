@@ -1,7 +1,6 @@
 import * as Location from "expo-location";
 import { apiPost } from "./api";
 import { auth } from "./firebase";
-import { addRiskScore } from "./shRiskScoreService";
 
 let SpeechRecognition = null;
 
@@ -119,7 +118,6 @@ class VoiceHelper {
     }
 
     console.log("Voice trigger detected");
-    addRiskScore(40, "Emergency Voice Trigger");
 
     const uid = auth.currentUser?.uid;
     if (!uid) return;
@@ -143,8 +141,6 @@ class VoiceHelper {
       return;
     }
     this.lastSoundReportAt = now;
-
-    addRiskScore(25, "Loud Sound / Scream Detected");
 
     const uid = auth.currentUser?.uid;
     if (!uid) return;

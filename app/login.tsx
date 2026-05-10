@@ -2,6 +2,7 @@ import { sendPasswordResetEmail, signInWithEmailAndPassword } from "firebase/aut
 import { auth } from "../services/firebase";
 import { useState } from 'react';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import {
   View,
   Text,
@@ -17,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
@@ -88,14 +90,19 @@ export default function LoginScreen() {
 
           <View style={styles.inputWrapper}>
             <Text style={styles.inputLabel}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your password"
-              placeholderTextColor="rgba(255,255,255,0.2)"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Enter your password"
+                placeholderTextColor="rgba(255,255,255,0.2)"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                <Ionicons name={showPassword ? "eye-off" : "eye"} size={20} color="rgba(255,255,255,0.5)" />
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity onPress={handleForgotPassword} style={{ alignSelf: 'flex-end', marginTop: 4 }}>
               <Text style={{ color: '#e05a7a', fontSize: 12 }}>Forgot Password?</Text>
             </TouchableOpacity>
@@ -142,6 +149,23 @@ const styles = StyleSheet.create({
     padding: 14,
     color: 'white',
     fontSize: 14,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 14,
+    color: 'white',
+    fontSize: 14,
+  },
+  eyeIcon: {
+    padding: 14,
   },
   submitBtn: {
     backgroundColor: '#e05a7a',

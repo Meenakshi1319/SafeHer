@@ -39,6 +39,7 @@ backend/.env
 backend/serviceAccountKey.json
 backend/logs/
 backend/uploads/
+backend/coverage/
 
 # typescript
 *.tsbuildinfo

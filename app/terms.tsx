@@ -1,18 +1,19 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TermsScreen() {
   const [accepted, setAccepted] = useState(false);
 
   function handleAccept() {
+    if (!accepted) return;
     router.replace('/login');
   }
 

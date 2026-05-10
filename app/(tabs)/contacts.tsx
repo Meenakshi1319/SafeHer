@@ -1,20 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  Modal,
-  FlatList,
-  ActivityIndicator,
-  LayoutAnimation,
-  Platform,
-  UIManager,
-  Alert,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    LayoutAnimation,
+    Modal,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    UIManager,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { apiGet, apiPost, BASE_URL } from '../../services/api';
+import { apiDelete, apiGet, apiPost } from '../../services/api';
 import { auth } from '../../services/firebase';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -91,16 +91,12 @@ export default function ContactsScreen() {
             const uid = auth.currentUser?.uid;
             if (!uid) return;
             try {
-              const res = await fetch(`${BASE_URL}/contacts/${uid}/${cid}`, { method: 'DELETE' });
-              if (res.ok) {
-                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                setContacts((prev) => prev.filter((c) => c.id !== cid));
-              } else {
-                Alert.alert('Error', 'Failed to delete contact from server.');
-              }
+              await apiDelete(`/contacts/${uid}/${cid}`);
+              LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+              setContacts((prev) => prev.filter((c) => c.id !== cid));
             } catch (err) {
               console.log('Delete contact error:', err);
-              Alert.alert('Error', 'Could not connect to server.');
+              Alert.alert('Error', 'Could not delete contact.');
             }
           },
         },
@@ -171,7 +167,7 @@ export default function ContactsScreen() {
             />
 
             <View style={styles.typeSelector}>
-              {['family', 'trusted', 'police'].map((t) => (
+              {['family', 'trusted', 'volunteer', 'ngo', 'police'].map((t) => (
                 <TouchableOpacity
                   key={t}
                   style={[styles.typeBtn, type === t && styles.typeBtnActive]}
@@ -284,7 +280,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginBottom: 12,
   },
-  typeSelector: { flexDirection: 'row', gap: 8, marginBottom: 24 },
+  typeSelector: { flexDirection: 'row', gap: 8, marginBottom: 24, flexWrap: 'wrap' },
   typeBtn: {
     flex: 1,
     paddingVertical: 10,

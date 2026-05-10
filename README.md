@@ -1,71 +1,160 @@
-# SafeHer 🛡️
+# SafeHer - Women's Safety Application
 
-A comprehensive, AI-powered women's safety mobile application built with React Native (Expo) and a Node.js/Firebase backend. 
+SafeHer is a comprehensive mobile safety application designed to enhance personal security through intelligent monitoring, emergency response, and community features.
 
-SafeHer is designed to provide real-time protection, emergency escalation, and community support through intelligent sensor detection and dynamic risk scoring.
+## 🌟 Features
 
-## 🚀 Features
+### Core Safety Features
+- **Real-time Risk Assessment**: AI-powered risk scoring based on location, time, and environmental factors
+- **Emergency SOS**: Quick access emergency alert system with escalation protocols
+- **Live Location Tracking**: Share your location with trusted contacts
+- **Smart Check-ins**: Automated safety check-ins with customizable intervals
+- **Fake Call Feature**: Decoy call interface for uncomfortable situations
+- **Audio/Video Recording**: Automatic recording during high-risk situations
 
-*   **🧠 AI Risk Engine:** Continuously evaluates user safety using a multi-factor scoring system (0-100).
-*   **🤖 AI Safety Chatbot:** Gemini-powered assistant providing immediate safety advice, self-defense tips, and emotional support.
-*   **🚨 Smart Escalation System:** Automatically notifies Family (Medium Risk), Volunteers (High Risk), or Police (Critical Risk) based on real-time threat levels.
-*   **🎙️ Voice Keyword Detection:** Detects distress keywords (e.g., "help me", "emergency") locally to auto-trigger SOS.
-*   **📳 Shake & 🔊 Sound Detection:** Hardware sensor integration to detect physical struggles or loud screams.
-*   **🎥 Auto-Evidence Recording:** Automatically starts logging evidence when high-risk thresholds are crossed.
-*   **🗺️ Dynamic Safe Routes:** Provides real-time mapping of nearby danger zones and safe routes based on live GPS tracking.
+### AI-Powered Features
+- **Voice Trigger Detection**: Activate emergency features with voice commands
+- **Shake Detection**: Motion-based emergency activation
+- **Sound Analysis**: Detect distress sounds and potential threats
+- **Intelligent Alerts**: Context-aware notifications to emergency contacts
 
-## 🛠️ Technology Stack
+### Community & Support
+- **Emergency Contacts Management**: Organize and prioritize your safety network
+- **Community Safety Map**: View and report safe/unsafe areas
+- **Resource Directory**: Access to local emergency services and support organizations
 
-*   **Frontend:** React Native (Expo), Expo Router, Socket.io-client
-*   **Backend:** Node.js, Express, Socket.io (Real-time events)
-*   **Database & Auth:** Firebase Auth, Firestore, Firebase Admin SDK
-*   **AI Integration:** Google Gemini 2.0 Flash API
+## 🚀 Quick Start
 
-## 📋 Prerequisites
+### Prerequisites
+- Node.js (v16+)
+- npm or yarn
+- Expo CLI
+- Firebase account
+- API keys for: Twilio, Google Gemini, OpenAI
 
-To run this project, you will need:
-*   Node.js (v18+)
-*   Expo CLI (`npm install -g expo-cli`)
-*   Firebase Project with Firestore and Authentication (Email/Password) enabled
-*   Google Gemini API Key
-*   Twilio Account (Optional, for SMS alerts)
+### Installation
 
-## ⚙️ Setup & Installation
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd SafeHer
+   ```
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/yourusername/safeher.git
-cd safeher
+2. **Install dependencies**
+   ```bash
+   npm install
+   cd backend
+   npm install
+   cd ..
+   ```
+
+3. **Configure environment variables**
+   - Copy `.env.local.example` to `.env.local` and configure frontend
+   - Copy `backend/.env.example` to `backend/.env` and add your API keys
+   - Add Firebase service account key as `backend/serviceAccountKey.json`
+
+4. **Start the application**
+   ```bash
+   # Terminal 1 - Backend
+   cd backend
+   npm start
+
+   # Terminal 2 - Frontend
+   npm start
+   ```
+
+For detailed setup instructions, see [SETUP.md](./SETUP.md)
+
+## 📁 Project Structure
+
 ```
-
-### 2. Backend Setup
-```bash
-cd backend
-npm install
+SafeHer/
+├── app/                      # Frontend application screens
+│   ├── (tabs)/              # Tab-based navigation screens
+│   ├── login.tsx            # Authentication screens
+│   └── register.tsx
+├── backend/                  # Backend API server
+│   ├── routes/              # API route handlers
+│   ├── middleware/          # Express middleware
+│   └── __tests__/           # Backend tests
+├── components/              # Reusable React components
+├── services/                # Frontend service layer
+├── hooks/                   # Custom React hooks
+├── constants/               # App constants and configuration
+└── assets/                  # Images, sounds, and static files
 ```
-*   Create a `.env` file in the `backend/` directory:
-    ```env
-    PORT=5000
-    FIRESTORE_PREFER_REST=true
-    GEMINI_API_KEY=your_gemini_api_key
-    ```
-*   Download your Firebase Service Account Key and save it as `backend/serviceAccountKey.json`.
-*   Start the server:
-    ```bash
-    npm start
-    ```
-
-### 3. Frontend Setup
-Open a new terminal window.
-```bash
-# from the root 'safeher' directory
-npm install
-npx expo start
-```
-*   Scan the QR code with the Expo Go app on your phone.
 
 ## 🔒 Security & Privacy
 
-*   Location data is only transmitted during active sessions or SOS triggers.
-*   Voice detection runs strictly on-device using local keyword matching.
-*   API Keys and Service Accounts are ignored in version control to prevent leaks.
+- All sensitive data is encrypted in transit and at rest
+- API keys and credentials are never committed to the repository
+- User location data is only shared with explicitly authorized contacts
+- Audio/video recordings are stored securely with user consent
+- See [ARCHITECTURE.md](./ARCHITECTURE.md) for security details
+
+## 🧪 Testing
+
+```bash
+# Run backend tests
+cd backend
+npm test
+
+# Run with coverage
+npm run test:coverage
+```
+
+See [TESTING.md](./TESTING.md) for comprehensive testing documentation.
+
+## 📚 Documentation
+
+- [Setup Guide](./SETUP.md) - Detailed installation and configuration
+- [API Documentation](./API_DOCUMENTATION.md) - Backend API reference
+- [Architecture Overview](./ARCHITECTURE.md) - System design and architecture
+- [Contributing Guide](./CONTRIBUTING.md) - How to contribute to the project
+
+## 🛠️ Technology Stack
+
+### Frontend
+- React Native with Expo
+- TypeScript
+- Expo Router for navigation
+- Firebase for authentication and storage
+- Socket.io for real-time communication
+
+### Backend
+- Node.js with Express
+- Firebase Admin SDK
+- Google Gemini AI
+- OpenAI API
+- Twilio for SMS/calls
+- Socket.io for WebSocket connections
+
+## 🤝 Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+
+## ⚠️ Important Notes
+
+- **Never commit sensitive files**: `.env`, `.env.local`, `serviceAccountKey.json`
+- **API Keys**: Keep all API keys secure and rotate them if exposed
+- **Testing**: Always test on physical devices for location and sensor features
+- **Production**: Use environment-specific configurations for deployment
+
+## 🆘 Support
+
+For issues, questions, or feature requests:
+- Open an issue on GitHub
+- Check existing documentation
+- Review the troubleshooting section in [SETUP.md](./SETUP.md)
+
+## 🙏 Acknowledgments
+
+Built with the goal of making the world safer for everyone.
+
+---
+
+**Note**: This application is designed to enhance personal safety but should not replace professional emergency services. Always call local emergency services (911, 112, etc.) in life-threatening situations.

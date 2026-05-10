@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // SOS events: only the owning user may read or write their own SOS events
+    match /users/{uid}/sosEvents/{sessionId} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // User profile and sub-collections: only the owning user may access
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      match /{subcollection}/{docId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // Locations: only the owning user may read/write their location records
+    match /locations/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;
+    }
+
+    // Global alerts: authenticated users can create; only admins should read
+    // (admin reads are handled server-side via Admin SDK, which bypasses rules)
+    match /globalAlerts/{docId} {
+      allow create: if request.auth != null;
+    }
+
+  }
+}

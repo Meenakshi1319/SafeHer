@@ -1,0 +1,10 @@
+module.exports = {
+  testEnvironment: "node",
+
+  testMatch: ["**/__tests__/**/*.test.js"],
+  collectCoverageFrom: ["server.js"],
+  coverageDirectory: "coverage",
+  // Silence console noise during tests
+  silent: false,
+  verbose: true,
+};

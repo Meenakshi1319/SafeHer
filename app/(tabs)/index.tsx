@@ -47,16 +47,21 @@ export default function SOSScreen() {
   const pulse1 = useRef(new Animated.Value(1)).current;
   const pulse2 = useRef(new Animated.Value(1)).current;
   const pulse3 = useRef(new Animated.Value(1)).current;
+  const sosTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const statusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+  const pulseLoopsRef = useRef<Animated.CompositeAnimation[]>([]);
 
   useEffect(() => {
     const uid = auth.currentUser?.uid;
     if (!uid) return;
 
     const socket = io(BASE_URL);
-    
-    socket.on('connect', () => {
+
+    socket.on('connect', async () => {
       console.log('Socket connected');
-      socket.emit('register', { uid });
+      const token = await auth.currentUser?.getIdToken();
+      socket.emit('register', { uid, token });
     });
 
     socket.on('risk_sync', (data) => {
@@ -72,6 +77,9 @@ export default function SOSScreen() {
     VoiceHelper.startListening();
 
     return () => {
+      mountedRef.current = false;
+      if (sosTimeoutRef.current) clearTimeout(sosTimeoutRef.current);
+      if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
       socket.disconnect();
       VoiceHelper.stopListening();
     };
@@ -79,7 +87,7 @@ export default function SOSScreen() {
 
   useEffect(() => {
     function animate(anim: Animated.Value, delay: number) {
-      Animated.loop(
+      const loop = Animated.loop(
         Animated.sequence([
           Animated.delay(delay),
           Animated.timing(anim, {
@@ -93,11 +101,18 @@ export default function SOSScreen() {
             useNativeDriver: true,
           }),
         ])
-      ).start();
+      );
+      loop.start();
+      pulseLoopsRef.current.push(loop);
     }
     animate(pulse1, 0);
     animate(pulse2, 300);
     animate(pulse3, 600);
+
+    return () => {
+      pulseLoopsRef.current.forEach((loop) => loop.stop());
+      pulseLoopsRef.current = [];
+    };
   }, [pulse1, pulse2, pulse3]);
 
   async function handleSOS() {
@@ -133,15 +148,17 @@ export default function SOSScreen() {
       await audioRecorder.prepareToRecordAsync();
       audioRecorder.record();
 
-      setTimeout(async () => {
+      sosTimeoutRef.current = setTimeout(async () => {
         await audioRecorder.stop();
         const uri = audioRecorder.uri;
+        if (!mountedRef.current) return;
         setRecordingStatus('🔄 Uploading evidence to Cloud Vault...');
 
         let fileName = '';
         const uid = auth.currentUser?.uid || 'unknown';
 
         if (uri) {
+          const token = await auth.currentUser?.getIdToken();
           const formData = new FormData();
           formData.append('uid', uid);
           formData.append('type', 'audio');
@@ -155,7 +172,10 @@ export default function SOSScreen() {
           const res = await fetch(`${BASE_URL}/upload-evidence`, {
             method: 'POST',
             body: formData,
-            headers: { 'Accept': 'application/json' },
+            headers: {
+              'Accept': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
           });
           
           const result = await res.json();
@@ -182,8 +202,11 @@ export default function SOSScreen() {
           ...prev
         ]);
 
+        if (!mountedRef.current) return;
         setRecordingStatus('✅ Evidence securely saved to Firebase.');
-        setTimeout(() => setRecordingStatus(''), 4000);
+        statusTimeoutRef.current = setTimeout(() => {
+          if (mountedRef.current) setRecordingStatus('');
+        }, 4000);
       }, 10000);
 
     } catch (err) {

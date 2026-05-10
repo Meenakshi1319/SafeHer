@@ -21,18 +21,13 @@ export default function Layout() {
           tabBarIcon: () => <Text style={{ fontSize: 20 }}>🛡️</Text>,
         }}
       />
-      <Tabs.Screen
-        name="decoy"
-        options={{ href: null }}
-      />
-      <Tabs.Screen
-        name="community"
-        options={{ href: null }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{ href: null }}
-      />
+      {/* Hidden screens — accessible via router.push from Profile */}
+      <Tabs.Screen name="decoy"     options={{ href: null }} />
+      <Tabs.Screen name="community" options={{ href: null }} />
+      <Tabs.Screen name="explore"   options={{ href: null }} />
+      <Tabs.Screen name="checkin"   options={{ href: null }} />
+      <Tabs.Screen name="tracking"  options={{ href: null }} />
+
       <Tabs.Screen
         name="map"
         options={{
@@ -66,6 +61,13 @@ export default function Layout() {
         options={{
           title: 'Contacts',
           tabBarIcon: () => <Text style={{ fontSize: 20 }}>📞</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>👤</Text>,
         }}
       />
     </Tabs>

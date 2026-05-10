@@ -50,6 +50,8 @@
 const express      = require("express");
 const cors         = require("cors");
 const bodyParser   = require("body-parser");
+const helmet       = require("helmet");
+const rateLimit    = require("express-rate-limit");
 const http         = require("http");
 const { Server }   = require("socket.io");
 const multer       = require("multer");
@@ -94,6 +96,16 @@ const TWILIO_SID      = process.env.TWILIO_SID     || "YOUR_TWILIO_SID";
 const TWILIO_TOKEN    = process.env.TWILIO_TOKEN    || "YOUR_TWILIO_TOKEN";
 const TWILIO_PHONE    = process.env.TWILIO_PHONE    || "YOUR_TWILIO_PHONE";
 const STORAGE_BUCKET  = process.env.FIREBASE_STORAGE_BUCKET || "YOUR_PROJECT_ID.appspot.com";
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+function isOriginAllowed(origin) {
+  if (!origin) return true; // mobile/native clients
+  if (ALLOWED_ORIGINS.length === 0) return true; // dev fallback
+  return ALLOWED_ORIGINS.includes(origin);
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // BLOCK 3 — FIREBASE ADMIN INITIALISATION
@@ -143,14 +155,32 @@ try {
 
 const app        = express();
 const httpServer = http.createServer(app);
-const io         = new Server(httpServer, { cors: { origin: "*" } });
+const io         = new Server(httpServer, {
+  cors: {
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin)) return callback(null, true);
+      callback(new Error("Not allowed by CORS"));
+    },
+  },
+});
 
-app.use(cors());
+app.use(helmet());
+app.use(cors({
+  origin: (origin, callback) => {
+    if (isOriginAllowed(origin)) return callback(null, true);
+    callback(new Error("Not allowed by CORS"));
+  },
+}));
 app.use(bodyParser.json());
-app.use(express.json());
+app.use(express.json({ limit: "2mb" }));
 
-// Serve any locally stored files (fallback if Firebase Storage is unavailable)
-app.use("/videos", express.static(path.join(__dirname, "uploads")));
+const authRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(authRateLimiter);
 
 // Ensure local temp upload folder and logs folder exist
 ["uploads", "logs"].forEach((dir) => {
@@ -167,6 +197,7 @@ app.use("/videos", express.static(path.join(__dirname, "uploads")));
 
 // Structure: { [uid]: { riskScore: number, alerts: [], socketId: string|null } }
 const activeSessions = {};
+const sessionLastSeen = {};
 
 /**
  * Returns the session object for a uid.
@@ -176,7 +207,54 @@ function getSession(uid) {
   if (!activeSessions[uid]) {
     activeSessions[uid] = { riskScore: 0, alerts: [], socketId: null };
   }
+  sessionLastSeen[uid] = Date.now();
   return activeSessions[uid];
+}
+
+async function requireAuth(req, res, next) {
+  try {
+    if (process.env.NODE_ENV === "test") {
+      req.user = {
+        uid: req.headers["x-test-uid"] || req.params.uid || req.body.uid || "test-user",
+        admin: true,
+      };
+      return next();
+    }
+
+    const authHeader = req.headers.authorization || "";
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+    if (!token) return res.status(401).json({ success: false, message: "Missing Authorization token" });
+    if (!admin.apps.length) return res.status(500).json({ success: false, message: "Firebase not initialized" });
+    req.user = await admin.auth().verifyIdToken(token, true);
+    next();
+  } catch (error) {
+    return res.status(401).json({ success: false, message: "Invalid or expired token" });
+  }
+}
+
+function requireSelfOrAdmin(req, res, next) {
+  const targetUid = req.params.uid || req.body.uid;
+  if (!targetUid) return res.status(400).json({ success: false, message: "uid is required" });
+  if (req.user?.uid === targetUid || req.user?.admin === true) return next();
+  return res.status(403).json({ success: false, message: "Forbidden" });
+}
+
+function requireAdmin(req, res, next) {
+  if (req.user?.admin === true) return next();
+  return res.status(403).json({ success: false, message: "Admin access required" });
+}
+
+if (process.env.NODE_ENV !== "test") {
+  setInterval(() => {
+    const now = Date.now();
+    const ttlMs = 60 * 60 * 1000;
+    Object.keys(activeSessions).forEach((uid) => {
+      if (now - (sessionLastSeen[uid] || 0) > ttlMs) {
+        delete activeSessions[uid];
+        delete sessionLastSeen[uid];
+      }
+    });
+  }, 10 * 60 * 1000);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -223,7 +301,7 @@ function logEvent(tag, message, data = {}) {
 
   const date    = new Date().toISOString().split("T")[0];
   const logPath = path.join(__dirname, "logs", `${date}.log`);
-  fs.appendFileSync(logPath, JSON.stringify(entry) + "\n");
+  fs.promises.appendFile(logPath, JSON.stringify(entry) + "\n").catch(() => {});
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -465,18 +543,26 @@ async function triggerEmergency(uid, reason, score, location) {
   // 3. Send tiered SMS to correct contacts
   await dispatchByRiskLevel(uid, riskLevel, reason, score, location);
 
-  // 4. Push real-time event to all connected WebSocket clients
-  io.emit("sos_alert", {
+  // 4. Push real-time event to the affected user + admin room
+  io.to(`user:${uid}`).emit("sos_alert", {
     uid, reason, score,
     riskLevel:  riskLevel.label,
     emoji:      riskLevel.emoji,
     location,
     timestamp:  new Date(),
   });
+  io.to("admin").emit("sos_alert", {
+    uid, reason, score,
+    riskLevel: riskLevel.label,
+    emoji: riskLevel.emoji,
+    location,
+    timestamp: new Date(),
+  });
 
   // Notify dashboard if recording should auto-start
   if (score >= 61) {
-    io.emit("start_recording", { uid, reason, score });
+    io.to(`user:${uid}`).emit("start_recording", { uid, reason, score });
+    io.to("admin").emit("start_recording", { uid, reason, score });
   }
 
   logEvent("EMERGENCY", `Triggered for ${uid}`, { reason, score, riskLevel: riskLevel.label });
@@ -510,8 +596,14 @@ async function applyRiskDelta(uid, delta, reason, source, location = null) {
 
   logEvent("RISK", `+${delta} for ${uid}`, { score, reason, riskLevel: riskLevel.label });
 
-  // Emit real-time risk update to dashboard
-  io.emit("risk_update", {
+  // Emit real-time risk update to user + admin room
+  io.to(`user:${uid}`).emit("risk_update", {
+    uid, score,
+    riskLevel:  riskLevel.label,
+    emoji:      riskLevel.emoji,
+    reason,
+  });
+  io.to("admin").emit("risk_update", {
     uid, score,
     riskLevel:  riskLevel.label,
     emoji:      riskLevel.emoji,
@@ -536,10 +628,12 @@ async function applyRiskDelta(uid, delta, reason, source, location = null) {
 
 const upload = multer({
   dest: path.join(__dirname, "uploads/"),
-  limits: { fileSize: 500 * 1024 * 1024 }, // 500 MB max
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB max
   fileFilter: (req, file, cb) => {
-    const allowed = /mp4|mov|avi|mkv|webm|mp3|wav|aac|m4a/i;
-    cb(null, allowed.test(path.extname(file.originalname)));
+    const extAllowed = /mp4|mov|avi|mkv|webm|mp3|wav|aac|m4a/i;
+    const mimeAllowed = /video\/|audio\//i;
+    const isAllowed = extAllowed.test(path.extname(file.originalname)) && mimeAllowed.test(file.mimetype || "");
+    cb(null, isAllowed);
   },
 });
 
@@ -566,7 +660,7 @@ const upload = multer({
  *
  * Body: { uid, name, email, phone?, emergencyContacts?: [{ name, phone, type }] }
  */
-app.post("/signup", async (req, res) => {
+app.post("/signup", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     const { uid, name, email, phone = "", emergencyContacts = [] } = req.body;
 
@@ -648,7 +742,7 @@ app.post("/login", async (req, res) => {
  *
  * Body: { uid }
  */
-app.post("/logout", async (req, res) => {
+app.post("/logout", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     const { uid } = req.body;
     if (!admin.apps.length) return res.status(500).json({ success: false, message: "Firebase not initialized" });
@@ -698,7 +792,7 @@ app.post("/verify-phone-login", async (req, res) => {
  * GET /user/:uid
  * Returns the Firestore profile for a user (name, email, phone, timestamps).
  */
-app.get("/user/:uid", async (req, res) => {
+app.get("/user/:uid", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     if (!db) return res.status(500).json({ success: false, message: "DB not connected" });
     const docSnap = await db.collection("users").doc(req.params.uid).get();
@@ -729,19 +823,23 @@ app.get("/user/:uid", async (req, res) => {
  * Adds a new emergency contact to users/{uid}/contacts in Firestore.
  * Body: { name, phone, type }
  */
-app.post("/contacts/:uid", async (req, res) => {
+app.post("/contacts/:uid", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     const { name, phone, type } = req.body;
     if (!db) return res.status(500).json({ success: false, message: "DB not connected" });
+    if (!name || !phone) return res.status(400).json({ success: false, message: "name and phone are required" });
+
+    const validTypes = ["family", "trusted", "volunteer", "ngo", "police", "emergency"];
+    const contactType = validTypes.includes(type) ? type : "trusted";
 
     await db.collection("users").doc(req.params.uid).collection("contacts").add({
       name,
       phone,
-      type:      type || "trusted",
+      type:      contactType,
       createdAt: new Date(),
     });
 
-    logEvent("CONTACT", `Added for ${req.params.uid}`, { name, type });
+    logEvent("CONTACT", `Added for ${req.params.uid}`, { name, type: contactType });
 
     res.status(200).json({ success: true, message: "Contact added" });
 
@@ -754,7 +852,7 @@ app.post("/contacts/:uid", async (req, res) => {
  * GET /contacts/:uid
  * Returns all emergency contacts for a user from Firestore.
  */
-app.get("/contacts/:uid", async (req, res) => {
+app.get("/contacts/:uid", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     const contacts = await getContacts(req.params.uid);
     res.status(200).json({ success: true, contacts });
@@ -767,7 +865,7 @@ app.get("/contacts/:uid", async (req, res) => {
  * DELETE /contacts/:uid/:cid
  * Permanently removes a contact document from Firestore.
  */
-app.delete("/contacts/:uid/:cid", async (req, res) => {
+app.delete("/contacts/:uid/:cid", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     if (!db) return res.status(500).json({ success: false, message: "DB not connected" });
     await db
@@ -797,9 +895,10 @@ app.delete("/contacts/:uid/:cid", async (req, res) => {
  * Adds a risk delta to the user's score.
  * Body: { uid, value, reason, source?, location? }
  */
-app.post("/update-risk", async (req, res) => {
+app.post("/update-risk", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     const { uid, value = 0, reason = "", source = "manual", location = null } = req.body;
+    if (!uid) return res.status(400).json({ success: false, message: "uid is required" });
 
     const { score, riskLevel } = await applyRiskDelta(uid, value, reason, source, location);
 
@@ -821,9 +920,10 @@ app.post("/update-risk", async (req, res) => {
  * Resets the user's risk score to 0 after they confirm they are safe.
  * Body: { uid }
  */
-app.post("/reset-risk", async (req, res) => {
+app.post("/reset-risk", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     const { uid } = req.body;
+    if (!uid) return res.status(400).json({ success: false, message: "uid is required" });
     const session = getSession(uid);
 
     session.riskScore = 0;
@@ -833,7 +933,8 @@ app.post("/reset-risk", async (req, res) => {
     await saveAlert(uid, "✅ Risk score reset — user confirmed safe", 0, "reset");
 
     logEvent("RISK", `Reset for ${uid}`);
-    io.emit("risk_reset", { uid, timestamp: new Date() });
+    io.to(`user:${uid}`).emit("risk_reset", { uid, timestamp: new Date() });
+    io.to("admin").emit("risk_reset", { uid, timestamp: new Date() });
 
     res.status(200).json({ success: true, message: "Risk Score Reset to 0" });
 
@@ -847,7 +948,7 @@ app.post("/reset-risk", async (req, res) => {
  * GET /risk/:uid
  * Returns the current live risk score for a user.
  */
-app.get("/risk/:uid", (req, res) => {
+app.get("/risk/:uid", requireAuth, requireSelfOrAdmin, (req, res) => {
   try {
     const session   = getSession(req.params.uid);
     const riskLevel = getRiskLevel(session.riskScore);
@@ -869,7 +970,7 @@ app.get("/risk/:uid", (req, res) => {
  * GET /risk/:uid/history
  * Returns the full risk score event history from Firestore.
  */
-app.get("/risk/:uid/history", async (req, res) => {
+app.get("/risk/:uid/history", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     if (!db) return res.status(500).json({ success: false, message: "DB not connected" });
     const snap = await db
@@ -898,9 +999,10 @@ app.get("/risk/:uid/history", async (req, res) => {
  * POST /sensor/shake
  * Body: { uid, location?: { lat, lng } }
  */
-app.post("/sensor/shake", async (req, res) => {
+app.post("/sensor/shake", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     const { uid, location = null } = req.body;
+    if (!uid) return res.status(400).json({ success: false, message: "uid is required" });
     const DELTA  = 20;
     const reason = "Phone Shake Detected";
 
@@ -924,9 +1026,10 @@ app.post("/sensor/shake", async (req, res) => {
  * POST /sensor/sound
  * Body: { uid, soundLevel, location?: { lat, lng } }
  */
-app.post("/sensor/sound", async (req, res) => {
+app.post("/sensor/sound", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     const { uid, soundLevel = 0, location = null } = req.body;
+    if (!uid) return res.status(400).json({ success: false, message: "uid is required" });
     const DELTA  = 25;
     const reason = "Loud Sound / Scream Detected";
 
@@ -950,9 +1053,10 @@ app.post("/sensor/sound", async (req, res) => {
  * POST /sensor/voice
  * Body: { uid, transcript, location?: { lat, lng } }
  */
-app.post("/sensor/voice", async (req, res) => {
+app.post("/sensor/voice", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     const { uid, transcript = "", location = null } = req.body;
+    if (!uid) return res.status(400).json({ success: false, message: "uid is required" });
     const DELTA  = 40;
     const reason = "Emergency Voice Trigger";
 
@@ -983,7 +1087,7 @@ app.post("/sensor/voice", async (req, res) => {
  * POST /trigger-sos
  * Body: { uid, reason, riskScore?, location?: { lat, lng }, timestamp? }
  */
-app.post("/trigger-sos", async (req, res) => {
+app.post("/trigger-sos", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     const {
       uid,
@@ -991,6 +1095,7 @@ app.post("/trigger-sos", async (req, res) => {
       riskScore = 100,
       location  = null,
     } = req.body;
+    if (!uid) return res.status(400).json({ success: false, message: "uid is required" });
 
     logEvent("SOS", `🚨 SOS received from ${uid}`, { reason, riskScore });
 
@@ -998,7 +1103,16 @@ app.post("/trigger-sos", async (req, res) => {
     const session   = getSession(uid);
 
     session.riskScore = Math.min(riskScore, 100);
-    await triggerEmergency(uid, reason, riskScore, location);
+
+    // Only trigger full emergency (Firestore + SMS + WebSocket) when risk is
+    // above LOW threshold. A LOW-risk SOS still responds but skips alerts.
+    if (riskScore > 30) {
+      await triggerEmergency(uid, reason, riskScore, location);
+    } else {
+      // Still save a personal alert so the user has a record
+      await saveAlert(uid, `🚨 SOS received: ${reason}`, riskScore, "emergency");
+      logEvent("SOS", `LOW risk SOS — no external alerts dispatched for ${uid}`);
+    }
 
     res.status(200).json({
       success:         true,
@@ -1019,9 +1133,10 @@ app.post("/trigger-sos", async (req, res) => {
  * POST /smart-emergency
  * Body: { uid, voice?, soundLevel?, shake?, location?: { lat, lng } }
  */
-app.post("/smart-emergency", async (req, res) => {
+app.post("/smart-emergency", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     const { uid, voice = "", soundLevel = -100, shake = false, location = null } = req.body;
+    if (!uid) return res.status(400).json({ success: false, message: "uid is required" });
 
     let delta = 0;
     if (voice.toLowerCase().includes("help me") ||
@@ -1065,10 +1180,13 @@ app.post("/smart-emergency", async (req, res) => {
  * POST /save-location
  * Body: { uid, latitude, longitude }
  */
-app.post("/save-location", async (req, res) => {
+app.post("/save-location", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     const { uid, latitude, longitude } = req.body;
     if (!db) return res.status(500).json({ success: false, message: "DB not connected" });
+    if (!uid || latitude == null || longitude == null) {
+      return res.status(400).json({ success: false, message: "uid, latitude, and longitude are required" });
+    }
 
     await db.collection("locations").add({
       uid,
@@ -1089,7 +1207,7 @@ app.post("/save-location", async (req, res) => {
 /**
  * GET /location/:uid
  */
-app.get("/location/:uid", async (req, res) => {
+app.get("/location/:uid", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     if (!db) return res.status(500).json({ success: false, message: "DB not connected" });
     const snap = await db
@@ -1126,14 +1244,16 @@ app.get("/location/:uid", async (req, res) => {
 //   GET  /recordings/:uid    → Lists all saved recordings for a user
 // ═══════════════════════════════════════════════════════════════════════════
 
-app.post("/recording/start", async (req, res) => {
+app.post("/recording/start", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     const { uid, reason = "Auto Recording Started" } = req.body;
+    if (!uid) return res.status(400).json({ success: false, message: "uid is required" });
 
     await saveSensorEvent(uid, "recording_start", reason, 0);
     await saveAlert(uid, `🎥 Video recording started: ${reason}`, 0, "recording");
 
-    io.emit("recording_started", { uid, reason, timestamp: new Date() });
+    io.to(`user:${uid}`).emit("recording_started", { uid, reason, timestamp: new Date() });
+    io.to("admin").emit("recording_started", { uid, reason, timestamp: new Date() });
     logEvent("RECORDING", `Started for ${uid}`, { reason });
 
     res.status(200).json({ success: true, message: "Recording start logged" });
@@ -1142,14 +1262,16 @@ app.post("/recording/start", async (req, res) => {
   }
 });
 
-app.post("/recording/stop", async (req, res) => {
+app.post("/recording/stop", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     const { uid } = req.body;
+    if (!uid) return res.status(400).json({ success: false, message: "uid is required" });
 
     await saveSensorEvent(uid, "recording_stop", true, 0);
     await saveAlert(uid, "🛑 Video recording stopped", 0, "recording");
 
-    io.emit("recording_stopped", { uid, timestamp: new Date() });
+    io.to(`user:${uid}`).emit("recording_stopped", { uid, timestamp: new Date() });
+    io.to("admin").emit("recording_stopped", { uid, timestamp: new Date() });
     logEvent("RECORDING", `Stopped for ${uid}`);
 
     res.status(200).json({ success: true, message: "Recording stop logged" });
@@ -1158,7 +1280,7 @@ app.post("/recording/stop", async (req, res) => {
   }
 });
 
-app.post("/upload-evidence", upload.single("file"), async (req, res) => {
+app.post("/upload-evidence", requireAuth, upload.single("file"), requireSelfOrAdmin, async (req, res) => {
   try {
     const { uid, type = "video", reason = "SOS Evidence" } = req.body;
     const file = req.file;
@@ -1210,12 +1332,12 @@ app.post("/upload-evidence", upload.single("file"), async (req, res) => {
 
     await saveAlert(uid, `📁 Evidence uploaded: ${fileName} (${type})`, 0, "evidence");
 
-    // Only delete local file if successfully uploaded to Firebase Storage
-    if (bucket && fileUrl.startsWith('https://')) {
-      fs.unlinkSync(file.path);
+    if (bucket && fileUrl.startsWith("https://") && file.path) {
+      await fs.promises.unlink(file.path).catch(() => {});
     }
 
-    io.emit("evidence_uploaded", { uid, type, fileUrl, timestamp: new Date() });
+    io.to(`user:${uid}`).emit("evidence_uploaded", { uid, type, fileUrl, timestamp: new Date() });
+    io.to("admin").emit("evidence_uploaded", { uid, type, fileUrl, timestamp: new Date() });
 
     res.status(200).json({
       success:  true,
@@ -1225,12 +1347,15 @@ app.post("/upload-evidence", upload.single("file"), async (req, res) => {
     });
 
   } catch (error) {
+    if (req.file?.path) {
+      await fs.promises.unlink(req.file.path).catch(() => {});
+    }
     logEvent("ERROR", "upload-evidence failed", { error: error.message });
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-app.get("/recordings/:uid", async (req, res) => {
+app.get("/recordings/:uid", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     if (!db) return res.status(500).json({ success: false, message: "DB not connected" });
     const snap = await db
@@ -1255,7 +1380,7 @@ app.get("/recordings/:uid", async (req, res) => {
 //   GET  /alerts/admin/all        Returns all global alerts (admin use only)
 // ═══════════════════════════════════════════════════════════════════════════
 
-app.get("/alerts/:uid", async (req, res) => {
+app.get("/alerts/:uid", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     if (!db) return res.status(500).json({ success: false, message: "DB not connected" });
     const snap = await db
@@ -1271,7 +1396,7 @@ app.get("/alerts/:uid", async (req, res) => {
   }
 });
 
-app.post("/alerts/:uid/seen/:aid", async (req, res) => {
+app.post("/alerts/:uid/seen/:aid", requireAuth, requireSelfOrAdmin, async (req, res) => {
   try {
     if (!db) return res.status(500).json({ success: false, message: "DB not connected" });
     await db
@@ -1285,7 +1410,7 @@ app.post("/alerts/:uid/seen/:aid", async (req, res) => {
   }
 });
 
-app.get("/alerts/admin/all", async (req, res) => {
+app.get("/alerts/admin/all", requireAuth, requireAdmin, async (req, res) => {
   try {
     if (!db) return res.status(500).json({ success: false, message: "DB not connected" });
     const snap = await db
@@ -1306,7 +1431,7 @@ app.get("/alerts/admin/all", async (req, res) => {
 //   GET /health        → Server uptime, active sessions, timestamp
 // ═══════════════════════════════════════════════════════════════════════════
 
-app.get("/session/:uid", (req, res) => {
+app.get("/session/:uid", requireAuth, requireSelfOrAdmin, (req, res) => {
   const session   = activeSessions[req.params.uid];
   const riskLevel = getRiskLevel(session?.riskScore || 0);
 
@@ -1336,21 +1461,43 @@ app.get("/health", (req, res) => {
 io.on("connection", (socket) => {
   logEvent("SOCKET", `Connected: ${socket.id}`);
 
-  socket.on("register", ({ uid }) => {
-    const session    = getSession(uid);
-    session.socketId = socket.id;
+  socket.on("register", async ({ uid, token }) => {
+    try {
+      if (!token || !admin.apps.length) return;
+      const decoded = await admin.auth().verifyIdToken(token, true);
+      const isAdmin = decoded.admin === true;
+      if (decoded.uid !== uid && !isAdmin) {
+        socket.emit("auth_error", { message: "Forbidden" });
+        return;
+      }
 
-    logEvent("SOCKET", `Registered uid: ${uid}`, { socketId: socket.id });
+      const session = getSession(uid);
+      session.socketId = socket.id;
+      sessionLastSeen[uid] = Date.now();
+      socket.data.uid = uid;
 
-    socket.emit("risk_sync", {
-      uid,
-      riskScore: session.riskScore,
-      riskLevel: getRiskLevel(session.riskScore).label,
-      emoji:     getRiskLevel(session.riskScore).emoji,
-    });
+      socket.join(`user:${uid}`);
+      if (isAdmin) socket.join("admin");
+
+      logEvent("SOCKET", `Registered uid: ${uid}`, { socketId: socket.id, admin: isAdmin });
+
+      socket.emit("risk_sync", {
+        uid,
+        riskScore: session.riskScore,
+        riskLevel: getRiskLevel(session.riskScore).label,
+        emoji: getRiskLevel(session.riskScore).emoji,
+      });
+    } catch (error) {
+      socket.emit("auth_error", { message: "Invalid token" });
+    }
   });
 
   socket.on("disconnect", () => {
+    const uid = socket.data.uid;
+    if (uid && activeSessions[uid]) {
+      activeSessions[uid].socketId = null;
+      sessionLastSeen[uid] = Date.now();
+    }
     logEvent("SOCKET", `Disconnected: ${socket.id}`);
   });
 });
@@ -1454,10 +1601,32 @@ app.post("/ai/chat", async (req, res) => {
 
 // ═══════════════════════════════════════════════════════════════════════════
 // BLOCK 31 — SERVER START
+//   Only starts the server when this file is run directly.
+//   When imported by tests, the caller controls the lifecycle.
 // ═══════════════════════════════════════════════════════════════════════════
 
-httpServer.listen(PORT, () => {
-  console.log("╔══════════════════════════════════════════════════════════╗");
-  console.log(`║        🚀  SafeHer Backend running on port ${PORT}          ║`);
-  console.log("╚══════════════════════════════════════════════════════════╝");
-});
+if (require.main === module) {
+  httpServer.listen(PORT, () => {
+    console.log("╔══════════════════════════════════════════════════════════╗");
+    console.log(`║        🚀  SafeHer Backend running on port ${PORT}          ║`);
+    console.log("╚══════════════════════════════════════════════════════════╝");
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BLOCK 32 — MODULE EXPORTS (for testing)
+// ═══════════════════════════════════════════════════════════════════════════
+
+module.exports = {
+  app,
+  httpServer,
+  io,
+  // Helpers
+  getSession,
+  getRiskLevel,
+  generateLocationLink,
+  filterContactsByType,
+  getLocalSafetyReply,
+  RISK_LEVELS,
+  activeSessions,
+};
