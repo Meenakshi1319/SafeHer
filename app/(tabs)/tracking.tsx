@@ -3,16 +3,28 @@ import { useEffect, useRef, useState } from 'react';
 import {
     Alert,
     Animated,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from 'react-native';
-import MapView, { Circle, Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiGet, apiPost } from '@core/api/client';
 import { auth } from '@core/firebase';
+
+// Conditionally import MapView only on native platforms
+let MapView: any = null;
+let Marker: any = null;
+let Circle: any = null;
+
+if (Platform.OS !== 'web') {
+  const maps = require('react-native-maps');
+  MapView = maps.default;
+  Marker = maps.Marker;
+  Circle = maps.Circle;
+}
 
 type Contact = {
   id: string;
@@ -145,30 +157,45 @@ export default function TrackingScreen() {
         {/* Map */}
         <View style={styles.mapContainer}>
           {location ? (
-            <MapView
-              style={styles.map}
-              initialRegion={{
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-              }}
-              showsUserLocation
-            >
-              {isSharing && (
-                <Circle
-                  center={{ latitude: location.coords.latitude, longitude: location.coords.longitude }}
-                  radius={100}
-                  fillColor="rgba(255,77,121,0.2)"
-                  strokeColor="rgba(255,77,121,0.6)"
-                  strokeWidth={1.5}
-                />
-              )}
-              <Marker
-                coordinate={{ latitude: location.coords.latitude, longitude: location.coords.longitude }}
-                title="You are here"
-              />
-            </MapView>
+            Platform.OS === 'web' ? (
+              <View style={styles.mapPlaceholder}>
+                <Text style={styles.mapPlaceholderText}>📍 Map view available on mobile app</Text>
+                <Text style={styles.mapCoords}>
+                  {location.coords.latitude.toFixed(6)}, {location.coords.longitude.toFixed(6)}
+                </Text>
+              </View>
+            ) : MapView ? (
+              <MapView
+                style={styles.map}
+                initialRegion={{
+                  latitude: location.coords.latitude,
+                  longitude: location.coords.longitude,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                }}
+                showsUserLocation
+              >
+                {isSharing && Circle && (
+                  <Circle
+                    center={{ latitude: location.coords.latitude, longitude: location.coords.longitude }}
+                    radius={100}
+                    fillColor="rgba(255,77,121,0.2)"
+                    strokeColor="rgba(255,77,121,0.6)"
+                    strokeWidth={1.5}
+                  />
+                )}
+                {Marker && (
+                  <Marker
+                    coordinate={{ latitude: location.coords.latitude, longitude: location.coords.longitude }}
+                    title="You are here"
+                  />
+                )}
+              </MapView>
+            ) : (
+              <View style={styles.mapPlaceholder}>
+                <Text style={styles.mapPlaceholderText}>📍 Map not available</Text>
+              </View>
+            )
           ) : (
             <View style={styles.mapPlaceholder}>
               <Text style={styles.mapPlaceholderText}>📍 Locating…</Text>
@@ -251,43 +278,44 @@ export default function TrackingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#080810' },
+  container: { flex: 1, backgroundColor: '#3A1F28' },
   scroll: { padding: 20, gap: 16, paddingBottom: 40 },
   header: { marginBottom: 4 },
-  headerTitle: { color: 'white', fontSize: 24, fontWeight: '700' },
-  headerSub: { color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 4 },
+  headerTitle: { color: '#F5E6D3', fontSize: 24, fontWeight: '700' },
+  headerSub: { color: '#D8A46B', fontSize: 13, marginTop: 4 },
   mapContainer: { height: 200, borderRadius: 16, overflow: 'hidden', backgroundColor: '#111830', position: 'relative' },
   map: { width: '100%', height: '100%' },
-  mapPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  mapPlaceholderText: { color: 'rgba(255,255,255,0.4)', fontSize: 14 },
+  mapPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
+  mapPlaceholderText: { color: '#D8A46B', fontSize: 14 },
+  mapCoords: { color: '#F2EDE8', fontSize: 12, fontFamily: 'monospace' },
   pulseWrapper: { position: 'absolute', bottom: 16, right: 16, width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  pulseRing: { position: 'absolute', width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,77,121,0.3)', borderWidth: 1.5, borderColor: '#ff4d79' },
-  pulseDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#ff4d79' },
-  card: { backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 16, padding: 16, gap: 8 },
-  cardActive: { borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.06)' },
+  pulseRing: { position: 'absolute', width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,77,121,0.3)', borderWidth: 1.5, borderColor: '#E66A6A' },
+  pulseDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#E66A6A' },
+  card: { backgroundColor: '#6D3B4B', borderWidth: 1, borderColor: '#8B6F74', borderRadius: 16, padding: 16, gap: 8 },
+  cardActive: { borderColor: '#F28C82', backgroundColor: 'rgba(16,185,129,0.06)' },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   statusIcon: { fontSize: 16 },
-  statusActiveText: { color: '#10b981', fontSize: 15, fontWeight: '700' },
-  statusOffText: { color: 'rgba(255,255,255,0.5)', fontSize: 15, fontWeight: '600' },
-  statusHint: { color: 'rgba(255,255,255,0.4)', fontSize: 13, lineHeight: 18 },
-  elapsedText: { color: 'rgba(255,255,255,0.6)', fontSize: 13 },
-  shareLink: { color: '#ff4d79', fontSize: 12, marginTop: 2 },
+  statusActiveText: { color: '#F28C82', fontSize: 15, fontWeight: '700' },
+  statusOffText: { color: '#F2EDE8', fontSize: 15, fontWeight: '600' },
+  statusHint: { color: '#D8A46B', fontSize: 13, lineHeight: 18 },
+  elapsedText: { color: '#D8A46B', fontSize: 13 },
+  shareLink: { color: '#E66A6A', fontSize: 12, marginTop: 2 },
   section: { gap: 10 },
-  sectionTitle: { color: 'rgba(255,255,255,0.4)', fontSize: 11, letterSpacing: 1, fontWeight: '600' },
-  contactRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 14, gap: 12 },
+  sectionTitle: { color: '#D8A46B', fontSize: 11, letterSpacing: 1, fontWeight: '600' },
+  contactRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#6D3B4B', borderWidth: 1, borderColor: '#8B6F74', borderRadius: 14, padding: 14, gap: 12 },
   contactAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,77,121,0.15)', alignItems: 'center', justifyContent: 'center' },
-  contactAvatarText: { color: '#ff4d79', fontSize: 16, fontWeight: '700' },
+  contactAvatarText: { color: '#E66A6A', fontSize: 16, fontWeight: '700' },
   contactInfo: { flex: 1, gap: 2 },
-  contactName: { color: 'white', fontSize: 14, fontWeight: '600' },
-  contactPhone: { color: 'rgba(255,255,255,0.4)', fontSize: 12 },
+  contactName: { color: '#F5E6D3', fontSize: 14, fontWeight: '600' },
+  contactPhone: { color: '#D8A46B', fontSize: 12 },
   typeBadge: { backgroundColor: 'rgba(255,77,121,0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  typeBadgeText: { color: '#ff4d79', fontSize: 10, fontWeight: '700' },
-  emptyText: { color: 'rgba(255,255,255,0.4)', fontSize: 13, textAlign: 'center', paddingVertical: 4 },
+  typeBadgeText: { color: '#E66A6A', fontSize: 10, fontWeight: '700' },
+  emptyText: { color: '#D8A46B', fontSize: 13, textAlign: 'center', paddingVertical: 4 },
   actionBtn: { borderRadius: 16, paddingVertical: 16, alignItems: 'center', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 10, elevation: 6 },
-  actionBtnStart: { backgroundColor: '#ff4d79', shadowColor: '#ff4d79' },
-  actionBtnStop: { backgroundColor: '#10b981', shadowColor: '#10b981' },
-  actionBtnText: { color: 'white', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
+  actionBtnStart: { backgroundColor: '#E66A6A', shadowColor: '#E66A6A' },
+  actionBtnStop: { backgroundColor: '#F28C82', shadowColor: '#F28C82' },
+  actionBtnText: { color: '#F5E6D3', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
   infoCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   infoIcon: { fontSize: 16, marginTop: 1 },
-  infoText: { flex: 1, color: 'rgba(255,255,255,0.4)', fontSize: 12, lineHeight: 18 },
+  infoText: { flex: 1, color: '#D8A46B', fontSize: 12, lineHeight: 18 },
 });

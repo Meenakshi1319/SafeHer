@@ -48,7 +48,7 @@ export default function RiskScreen() {
   function getRiskLevel() {
     if (score <= 30) return { label: 'Low Risk', color: '#4caf8a', emoji: '🟢' };
     if (score <= 60) return { label: 'Moderate Risk', color: '#f0a500', emoji: '🟡' };
-    if (score <= 85) return { label: 'High Risk', color: '#e05a7a', emoji: '🟠' };
+    if (score <= 85) return { label: 'High Risk', color: '#E66A6A', emoji: '🟠' };
     return { label: 'Critical!', color: '#ff0000', emoji: '🔴' };
   }
 
@@ -84,7 +84,7 @@ export default function RiskScreen() {
         {score > 0 && (
           <TouchableOpacity style={styles.safeBtn} onPress={handleReset} disabled={resetting}>
             {resetting ? (
-              <ActivityIndicator color="white" />
+              <ActivityIndicator color='#F5E6D3' />
             ) : (
               <Text style={styles.safeBtnText}>I am Safe - Reset Risk</Text>
             )}
@@ -145,42 +145,42 @@ export default function RiskScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a12' },
+  container: { flex: 1, backgroundColor: '#3A1F28' },
   header: { padding: 20 },
-  title: { color: 'white', fontSize: 20, fontWeight: '500' },
-  subtitle: { color: 'rgba(255,255,255,0.3)', fontSize: 12, marginTop: 4 },
+  title: { color: '#F5E6D3', fontSize: 20, fontWeight: '500' },
+  subtitle: { color: '#F2EDE8', fontSize: 12, marginTop: 4 },
   circleWrapper: { alignItems: 'center', marginVertical: 20 },
   circle: {
     width: 150, height: 150, borderRadius: 75, borderWidth: 6,
     alignItems: 'center', justifyContent: 'center',
     shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.4, shadowRadius: 20, elevation: 10,
   },
-  scoreNum: { color: 'white', fontSize: 42, fontWeight: '500' },
+  scoreNum: { color: '#F5E6D3', fontSize: 42, fontWeight: '500' },
   riskLabel: { fontSize: 12, marginTop: 4 },
   safeBtn: {
     marginHorizontal: 20, backgroundColor: '#4caf8a', borderRadius: 14,
     padding: 16, alignItems: 'center', marginBottom: 16,
   },
-  safeBtnText: { color: 'white', fontSize: 15, fontWeight: '600' },
+  safeBtnText: { color: '#F5E6D3', fontSize: 15, fontWeight: '600' },
   escalation: {
     margin: 20, marginTop: 4, backgroundColor: '#1a0a0f',
     borderWidth: 0.5, borderColor: 'rgba(224,90,122,0.2)', borderRadius: 14, padding: 16,
   },
-  escTitle: { color: '#e05a7a', fontSize: 11, letterSpacing: 1, marginBottom: 12 },
+  escTitle: { color: '#E66A6A', fontSize: 11, letterSpacing: 1, marginBottom: 12 },
   escRow: { flexDirection: 'row', alignItems: 'center' },
   escStep: { alignItems: 'center', flex: 1, position: 'relative' },
   escDot: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  escLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 10, marginTop: 4 },
+  escLabel: { color: '#D8A46B', fontSize: 10, marginTop: 4 },
   escLine: { position: 'absolute', height: 1, width: '100%', top: 18, left: '50%' },
   historySection: { paddingHorizontal: 20, gap: 10, paddingBottom: 30 },
-  histTitle: { color: 'rgba(255,255,255,0.4)', fontSize: 11, letterSpacing: 1, marginBottom: 4 },
-  emptyText: { color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginTop: 20 },
+  histTitle: { color: '#D8A46B', fontSize: 11, letterSpacing: 1, marginBottom: 4 },
+  emptyText: { color: '#F2EDE8', textAlign: 'center', marginTop: 20 },
   histCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)',
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#6D3B4B',
     borderRadius: 12, padding: 14, gap: 12,
   },
   histInfo: { flex: 1, gap: 2 },
-  histReason: { color: 'white', fontSize: 13, fontWeight: '500' },
-  histSource: { color: 'rgba(255,255,255,0.35)', fontSize: 11 },
+  histReason: { color: '#F5E6D3', fontSize: 13, fontWeight: '500' },
+  histSource: { color: '#F2EDE8', fontSize: 11 },
   histDelta: { fontSize: 16, fontWeight: '700' },
 });

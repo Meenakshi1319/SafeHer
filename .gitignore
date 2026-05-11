@@ -1,15 +1,25 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
-# dependencies
+# ============================================================================
+# Dependencies
+# ============================================================================
 node_modules/
+**/node_modules/
+.pnp
+.pnp.js
 
-# Expo
+# ============================================================================
+# Expo & React Native
+# ============================================================================
 .expo/
 dist/
 web-build/
 expo-env.d.ts
+.expo-shared/
 
-# Native
+# ============================================================================
+# Native Build Artifacts
+# ============================================================================
 .kotlin/
 *.orig.*
 *.jks
@@ -17,39 +27,148 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+*.ipa
+*.apk
+*.aab
 
-# Metro
-.metro-health-check*
-
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
-.DS_Store
-*.pem
-
-# local env files
-.env*.local
-.env
-
-# backend secrets and runtime output
-backend/.env
-**/serviceAccountKey.json
-backend/logs/
-backend/uploads/
-backend/coverage/
-
-# typescript
-*.tsbuildinfo
-
-app-example
-
-# generated native folders
+# Generated native folders
 /ios
 /android
 
-# editors
+# ============================================================================
+# Metro Bundler
+# ============================================================================
+.metro-health-check*
+.metro/
+
+# ============================================================================
+# Debug & Logs
+# ============================================================================
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+logs/
+*.log.*
+backend/logs/
+backend/*.log
+
+# ============================================================================
+# Operating System Files
+# ============================================================================
+# macOS
+.DS_Store
+*.pem
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ============================================================================
+# Environment Variables & Secrets
+# ============================================================================
+.env
+.env.local
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+backend/.env
+backend/.env.local
+**/serviceAccountKey.json
+backend/serviceAccountKey.json
+*.pem
+*.key
+
+# ============================================================================
+# Backend Runtime & Generated Files
+# ============================================================================
+backend/logs/
+backend/uploads/
+backend/coverage/
+backend/dist/
+backend/build/
+backend/src/uploads/
+backend/public/uploads/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# ============================================================================
+# TypeScript
+# ============================================================================
+*.tsbuildinfo
+*.d.ts.map
+
+# ============================================================================
+# Build Artifacts
+# ============================================================================
+build/
+dist/
+out/
+.next/
+.cache/
+
+# ============================================================================
+# Temporary Files
+# ============================================================================
+*.tmp
+*.temp
+*.swp
+*.swo
+*.swn
+.tmp/
+temp/
+
+# ============================================================================
+# IDE & Editor Files
+# ============================================================================
 .vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
 .kiro/
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ============================================================================
+# Git Merge Files
+# ============================================================================
+*.orig
+*.BACKUP.*
+*.BASE.*
+*.LOCAL.*
+*.REMOTE.*
+*_BACKUP_*.txt
+*_BASE_*.txt
+*_LOCAL_*.txt
+*_REMOTE_*.txt
+
+# ============================================================================
+# Package Manager Locks (Optional - uncomment if needed)
+# ============================================================================
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ============================================================================
+# Miscellaneous
+# ============================================================================
+app-example
+.eslintcache

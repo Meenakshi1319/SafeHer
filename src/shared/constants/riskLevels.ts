@@ -18,7 +18,7 @@ export const RISK_LEVELS = {
     max: RISK_THRESHOLDS.LOW,
     label: 'LOW',
     emoji: '🟢',
-    color: '#10B981',
+    color: '#F28C82',
     description: 'No immediate threat detected',
     actions: ['Monitor sensors', 'Continue normal operation'],
   },

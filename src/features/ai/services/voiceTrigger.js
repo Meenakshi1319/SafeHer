@@ -52,10 +52,6 @@ class VoiceHelper {
 
     if (!isModuleAvailable || !SpeechRecognition) {
       console.log("❌ Speech Recognition module not loaded");
-      Alert.alert(
-        "Voice Recognition Unavailable",
-        "Speech recognition is not available on this device. Voice triggers will not work."
-      );
       return false;
     }
 
@@ -76,10 +72,6 @@ class VoiceHelper {
 
       if (!permissions.granted) {
         console.log("❌ Microphone permission denied");
-        Alert.alert(
-          "Permission Required",
-          "SafeHer needs microphone permission to detect emergency voice triggers. Please enable it in Settings."
-        );
         return false;
       }
 
@@ -91,10 +83,7 @@ class VoiceHelper {
       return true;
     } catch (error) {
       console.log("❌ Voice monitor start error:", error);
-      Alert.alert(
-        "Voice Recognition Error",
-        `Failed to start voice recognition: ${error.message}`
-      );
+      console.log("Error details:", error.message);
       return false;
     }
   }
@@ -142,16 +131,15 @@ class VoiceHelper {
           intervalMillis: 500,
         },
         iosVoiceProcessingEnabled: true,
+        androidIntentLookup: true,
+        androidRecognitionServicePackage: "com.google.android.googlequicksearchbox",
       });
       this.listening = true;
       console.log("✅ Speech recognition started successfully");
     } catch (error) {
       this.listening = false;
       console.log("❌ Voice recognition start error:", error);
-      Alert.alert(
-        "Voice Recognition Error",
-        `Could not start listening: ${error.message}`
-      );
+      console.log("Error details:", error.message);
     }
   }
 
@@ -251,15 +239,18 @@ class VoiceHelper {
     console.log("❌ Voice recognition error:", {
       error: errorType,
       message: event?.message,
-      full: event
+      full: JSON.stringify(event)
     });
 
-    // Don't show alert for common errors
-    if (errorType !== "network" && errorType !== "audio") {
-      Alert.alert(
-        "Voice Recognition Issue",
-        `Error: ${event?.message || errorType}\n\nVoice triggers may not work properly.`
-      );
+    // Restart recognition on certain errors
+    if (errorType === "audio" || errorType === "network") {
+      console.log("🔄 Attempting to restart recognition...");
+      this.listening = false;
+      setTimeout(() => {
+        if (this.shouldListen) {
+          this.startRecognition();
+        }
+      }, 2000);
     }
   };
 

@@ -7,11 +7,11 @@ export default function Layout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#111120',
+          backgroundColor: '#1B1620',
           borderTopColor: 'rgba(255,255,255,0.08)',
         },
-        tabBarActiveTintColor: '#ff4d79',
-        tabBarInactiveTintColor: 'rgba(255,255,255,0.3)',
+        tabBarActiveTintColor: '#E66A6A',
+        tabBarInactiveTintColor: '#F2EDE8',
       }}
     >
       <Tabs.Screen
@@ -22,11 +22,11 @@ export default function Layout() {
         }}
       />
       {/* Hidden screens — accessible via router.push from Profile */}
-      <Tabs.Screen name="decoy"     options={{ href: null }} />
+      <Tabs.Screen name="decoy" options={{ href: null }} />
       <Tabs.Screen name="community" options={{ href: null }} />
-      <Tabs.Screen name="explore"   options={{ href: null }} />
-      <Tabs.Screen name="checkin"   options={{ href: null }} />
-      <Tabs.Screen name="tracking"  options={{ href: null }} />
+      <Tabs.Screen name="explore" options={{ href: null }} />
+      <Tabs.Screen name="checkin" options={{ href: null }} />
+      <Tabs.Screen name="tracking" options={{ href: null }} />
       <Tabs.Screen name="voice-test" options={{ href: null }} />
 
       <Tabs.Screen

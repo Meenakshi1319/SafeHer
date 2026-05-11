@@ -153,14 +153,14 @@ export default function ContactsScreen() {
             <TextInput
               style={styles.input}
               placeholder="Full Name"
-              placeholderTextColor="rgba(255,255,255,0.3)"
+              placeholderTextColor='#F2EDE8'
               value={name}
               onChangeText={setName}
             />
             <TextInput
               style={styles.input}
               placeholder="Phone Number (e.g. +1234567890)"
-              placeholderTextColor="rgba(255,255,255,0.3)"
+              placeholderTextColor='#F2EDE8'
               keyboardType="phone-pad"
               value={phone}
               onChangeText={setPhone}
@@ -202,23 +202,23 @@ export default function ContactsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#080810' },
+  container: { flex: 1, backgroundColor: '#3A1F28' },
   header: { padding: 24, paddingBottom: 12 },
-  headerTitle: { color: 'white', fontSize: 24, fontWeight: '700' },
-  headerSub: { color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 4 },
+  headerTitle: { color: '#F5E6D3', fontSize: 24, fontWeight: '700' },
+  headerSub: { color: '#F2EDE8', fontSize: 13, marginTop: 4 },
   list: { padding: 20, gap: 12 },
   contactCard: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: '#6D3B4B',
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: '#8B6F74',
   },
   contactInfo: { flex: 1, gap: 4 },
-  contactName: { color: 'white', fontSize: 16, fontWeight: '600' },
-  contactPhone: { color: 'rgba(255,255,255,0.5)', fontSize: 14 },
+  contactName: { color: '#F5E6D3', fontSize: 16, fontWeight: '600' },
+  contactPhone: { color: '#F2EDE8', fontSize: 14 },
   typeBadge: {
     alignSelf: 'flex-start',
     backgroundColor: 'rgba(255,77,121,0.1)',
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 4,
   },
-  typeText: { color: '#ff4d79', fontSize: 10, fontWeight: '700' },
+  typeText: { color: '#E66A6A', fontSize: 10, fontWeight: '700' },
   deleteBtn: {
     backgroundColor: 'rgba(255,0,0,0.1)',
     padding: 12,
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   },
   deleteIcon: { fontSize: 18 },
   emptyText: {
-    color: 'rgba(255,255,255,0.4)',
+    color: '#D8A46B',
     textAlign: 'center',
     marginTop: 40,
   },
@@ -243,22 +243,22 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 24,
     right: 24,
-    backgroundColor: '#ff4d79',
+    backgroundColor: '#E66A6A',
     width: 60,
     height: 60,
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#ff4d79',
+    shadowColor: '#E66A6A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 10,
     elevation: 8,
   },
-  fabIcon: { color: 'white', fontSize: 32, fontWeight: '300', marginTop: -2 },
+  fabIcon: { color: '#F5E6D3', fontSize: 32, fontWeight: '300', marginTop: -2 },
   modalBg: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: '#1B1620',
     justifyContent: 'center',
     padding: 24,
   },
@@ -267,16 +267,16 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: '#8B6F74',
   },
-  modalTitle: { color: 'white', fontSize: 20, fontWeight: '700', marginBottom: 20 },
+  modalTitle: { color: '#F5E6D3', fontSize: 20, fontWeight: '700', marginBottom: 20 },
   input: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: '#6D3B4B',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: '#8B6F74',
     borderRadius: 12,
     padding: 14,
-    color: 'white',
+    color: '#F5E6D3',
     fontSize: 15,
     marginBottom: 12,
   },
@@ -285,15 +285,15 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: '#6D3B4B',
     alignItems: 'center',
   },
-  typeBtnActive: { backgroundColor: '#ff4d79' },
-  typeBtnText: { color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: '500' },
-  typeBtnTextActive: { color: 'white' },
+  typeBtnActive: { backgroundColor: '#E66A6A' },
+  typeBtnText: { color: '#F2EDE8', fontSize: 13, fontWeight: '500' },
+  typeBtnTextActive: { color: '#F5E6D3' },
   modalActions: { flexDirection: 'row', gap: 12 },
   modalBtn: { flex: 1, padding: 14, borderRadius: 12, alignItems: 'center' },
-  cancelBtn: { backgroundColor: 'rgba(255,255,255,0.1)' },
-  saveBtn: { backgroundColor: '#ff4d79' },
-  modalBtnText: { color: 'white', fontSize: 15, fontWeight: '600' },
+  cancelBtn: { backgroundColor: '#6D3B4B' },
+  saveBtn: { backgroundColor: '#E66A6A' },
+  modalBtnText: { color: '#F5E6D3', fontSize: 15, fontWeight: '600' },
 });

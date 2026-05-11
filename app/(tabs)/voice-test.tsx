@@ -175,24 +175,24 @@ export default function VoiceTestScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080810',
+    backgroundColor: '#3A1F28',
     padding: 20,
   },
   header: {
     marginBottom: 20,
   },
   title: {
-    color: '#fff',
+    color: '#F5E6D3',
     fontSize: 24,
     fontWeight: '700',
     marginBottom: 4,
   },
   subtitle: {
-    color: 'rgba(255,255,255,0.5)',
+    color: '#F2EDE8',
     fontSize: 14,
   },
   statusCard: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: '#6D3B4B',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statusLabel: {
-    color: 'rgba(255,255,255,0.7)',
+    color: '#F2EDE8',
     fontSize: 16,
   },
   statusBadge: {
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   statusGreen: {
-    backgroundColor: 'rgba(16,185,129,0.2)',
+    backgroundColor: '#6D3B4B',
   },
   statusRed: {
     backgroundColor: 'rgba(239,68,68,0.2)',
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(156,163,175,0.2)',
   },
   statusText: {
-    color: '#fff',
+    color: '#F5E6D3',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -238,16 +238,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonPrimary: {
-    backgroundColor: '#10b981',
+    backgroundColor: '#F28C82',
   },
   buttonDanger: {
     backgroundColor: '#ef4444',
   },
   buttonSecondary: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: '#6D3B4B',
   },
   buttonText: {
-    color: '#fff',
+    color: '#F5E6D3',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -264,13 +264,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   instructionsText: {
-    color: 'rgba(255,255,255,0.7)',
+    color: '#F2EDE8',
     fontSize: 13,
     lineHeight: 20,
   },
   logsContainer: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: '#6D3B4B',
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -283,12 +283,12 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   logsTitle: {
-    color: '#fff',
+    color: '#F5E6D3',
     fontSize: 14,
     fontWeight: '600',
   },
   clearButton: {
-    color: '#ff4d79',
+    color: '#E66A6A',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -297,13 +297,13 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   noLogs: {
-    color: 'rgba(255,255,255,0.3)',
+    color: '#F2EDE8',
     fontSize: 13,
     textAlign: 'center',
     marginTop: 20,
   },
   logItem: {
-    color: 'rgba(255,255,255,0.8)',
+    color: '#F2EDE8',
     fontSize: 11,
     fontFamily: 'monospace',
     marginBottom: 6,

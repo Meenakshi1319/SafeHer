@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     zIndex: 9999,
   },
   icon: {
-    color: 'white',
+    color: '#F5E6D3',
     fontSize: 24,
   },
 });

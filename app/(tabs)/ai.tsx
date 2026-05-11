@@ -126,7 +126,7 @@ export default function AIScreen() {
           <TextInput
             style={styles.input}
             placeholder="Ask SafeHer AI..."
-            placeholderTextColor="rgba(255,255,255,0.25)"
+            placeholderTextColor='#F2EDE8'
             value={input}
             onChangeText={setInput}
             onSubmitEditing={() => sendMessage(input)}
@@ -147,10 +147,10 @@ export default function AIScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#080810' },
+  container: { flex: 1, backgroundColor: '#3A1F28' },
   header: { padding: 20, paddingBottom: 10, borderBottomWidth: 0.5, borderBottomColor: 'rgba(255,255,255,0.05)' },
-  headerTitle: { color: '#ff4d79', fontSize: 22, fontWeight: '700' },
-  headerSub: { color: 'rgba(255,255,255,0.35)', fontSize: 12, marginTop: 2 },
+  headerTitle: { color: '#E66A6A', fontSize: 22, fontWeight: '700' },
+  headerSub: { color: '#F2EDE8', fontSize: 12, marginTop: 2 },
   messageList: { padding: 16, paddingBottom: 8, gap: 12 },
   msgRow: { flexDirection: 'row', gap: 8, maxWidth: '88%' },
   userRow: { alignSelf: 'flex-end' },
@@ -160,25 +160,25 @@ const styles = StyleSheet.create({
   aiBubble: {
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 0.5,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: '#8B6F74',
     borderTopLeftRadius: 4,
   },
   userBubble: {
-    backgroundColor: '#ff4d79',
+    backgroundColor: '#E66A6A',
     borderTopRightRadius: 4,
   },
-  msgText: { color: 'rgba(255,255,255,0.85)', fontSize: 14, lineHeight: 20 },
-  userText: { color: 'white' },
+  msgText: { color: '#F2EDE8', fontSize: 14, lineHeight: 20 },
+  userText: { color: '#F5E6D3' },
   quickActions: { paddingHorizontal: 16, paddingBottom: 10, gap: 8, flexDirection: 'row', flexWrap: 'wrap' },
   quickBtn: {
-    backgroundColor: 'rgba(255,77,121,0.08)',
+    backgroundColor: '#6D3B4B',
     borderWidth: 0.5,
-    borderColor: 'rgba(255,77,121,0.3)',
+    borderColor: '#8B6F74',
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
-  quickText: { color: '#ff4d79', fontSize: 13 },
+  quickText: { color: '#E66A6A', fontSize: 13 },
   inputBar: {
     flexDirection: 'row',
     padding: 12,
@@ -189,11 +189,11 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: '#6D3B4B',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    color: 'white',
+    color: '#F5E6D3',
     fontSize: 14,
     maxHeight: 100,
   },
@@ -201,10 +201,10 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#ff4d79',
+    backgroundColor: '#E66A6A',
     alignItems: 'center',
     justifyContent: 'center',
   },
   sendBtnDisabled: { opacity: 0.4 },
-  sendIcon: { color: 'white', fontSize: 18 },
+  sendIcon: { color: '#F5E6D3', fontSize: 18 },
 });

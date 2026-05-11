@@ -12,7 +12,7 @@ export default function ModalScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#080810' },
-  title: { fontSize: 20, fontWeight: 'bold', color: 'white' },
-  separator: { marginVertical: 30, height: 1, width: '80%', backgroundColor: 'rgba(255,255,255,0.1)' },
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#3A1F28' },
+  title: { fontSize: 20, fontWeight: 'bold', color: '#F5E6D3' },
+  separator: { marginVertical: 30, height: 1, width: '80%', backgroundColor: '#6D3B4B' },
 });

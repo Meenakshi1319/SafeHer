@@ -24,6 +24,13 @@ const { Server } = require("socket.io");
 const path       = require("path");
 const fs         = require("fs");
 
+// ── Environment Validation ────────────────────────────────────────────────
+const { validateEnvironment, printFeatureStatus } = require("./src/utils/validateEnv");
+
+// Validate environment variables before starting server
+validateEnvironment();
+printFeatureStatus();
+
 // ── Shared dependencies (Firebase, Twilio, Gemini) ───────────────────────
 const { PORT, isOriginAllowed } = require("./src/config/dependencies");
 
@@ -77,6 +84,15 @@ app.use(authRateLimiter);
   const p = path.join(__dirname, dir);
   if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
 });
+
+// Ensure evidence directory exists
+const evidenceDir = path.join(__dirname, "uploads", "evidence");
+if (!fs.existsSync(evidenceDir)) {
+  fs.mkdirSync(evidenceDir, { recursive: true });
+}
+
+// Serve evidence files statically
+app.use('/uploads/evidence', express.static(path.join(__dirname, 'uploads', 'evidence')));
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MOUNT ROUTES (Controllers)

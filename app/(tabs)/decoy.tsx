@@ -256,18 +256,18 @@ function evaluateExpression(expression: string): number {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a12',
+    backgroundColor: '#3A1F28',
   },
   header: {
     padding: 20,
   },
   title: {
-    color: 'white',
+    color: '#F5E6D3',
     fontSize: 20,
     fontWeight: '500',
   },
   subtitle: {
-    color: 'rgba(255,255,255,0.3)',
+    color: '#F2EDE8',
     fontSize: 12,
     marginTop: 4,
   },
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     backgroundColor: '#1a0a0f',
     borderWidth: 0.5,
-    borderColor: '#e05a7a30',
+    borderColor: '#E66A6A',
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
@@ -286,12 +286,12 @@ const styles = StyleSheet.create({
     fontSize: 36,
   },
   infoTitle: {
-    color: 'white',
+    color: '#F5E6D3',
     fontSize: 16,
     fontWeight: '500',
   },
   infoText: {
-    color: 'rgba(255,255,255,0.4)',
+    color: '#D8A46B',
     fontSize: 13,
     textAlign: 'center',
     lineHeight: 20,
@@ -310,23 +310,23 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   stepText: {
-    color: 'rgba(255,255,255,0.6)',
+    color: '#D8A46B',
     fontSize: 14,
   },
   activateBtn: {
     marginHorizontal: 20,
-    backgroundColor: '#e05a7a',
+    backgroundColor: '#E66A6A',
     borderRadius: 14,
     padding: 16,
     alignItems: 'center',
-    shadowColor: '#e05a7a',
+    shadowColor: '#E66A6A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 6,
   },
   activateText: {
-    color: 'white',
+    color: '#F5E6D3',
     fontSize: 15,
     fontWeight: '600',
   },
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
     zIndex: 999,
   },
   secretText: {
-    color: '#e05a7a',
+    color: '#E66A6A',
     fontSize: 8,
   },
   calcDisplay: {
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   calcInput: {
-    color: 'white',
+    color: '#F5E6D3',
     fontSize: 64,
     fontWeight: '200',
   },
@@ -398,12 +398,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#a5a5a5',
   },
   calcBtnText: {
-    color: 'white',
+    color: '#F5E6D3',
     fontSize: 28,
     fontWeight: '400',
   },
   calcBtnTextWhite: {
-    color: 'white',
+    color: '#F5E6D3',
   },
   calcBtnTextDark: {
     color: '#1c1c1e',

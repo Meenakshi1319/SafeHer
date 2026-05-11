@@ -241,7 +241,7 @@ export default function FakeCallOverlay({ visible, callerName, onClose }: FakeCa
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.6)' }]}>
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: '#1B1620' }]}>
         <View style={s.container}>
           
           <View style={s.topSection}>
@@ -281,7 +281,7 @@ export default function FakeCallOverlay({ visible, callerName, onClose }: FakeCa
 const s = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgba(27, 22, 32, 0.85)',
+    backgroundColor: '#1B1620',
     justifyContent: 'space-between',
     paddingVertical: 80,
   },
@@ -293,26 +293,26 @@ const s = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: 'rgba(212, 112, 143, 0.2)',
+    backgroundColor: '#6D3B4B',
     borderWidth: 2,
-    borderColor: '#D4708F',
+    borderColor: '#8B6F74',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
   },
   avatarSpeaking: {
-    borderColor: '#10B981',
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    borderColor: '#F28C82',
+    backgroundColor: '#6D3B4B',
     borderWidth: 4,
   },
   avatarText: {
     fontSize: 48,
-    color: '#F5E6EB',
+    color: '#F2EDE8',
     fontWeight: 'bold',
   },
   callerName: {
     fontSize: 32,
-    color: '#F5E6EB',
+    color: '#F2EDE8',
     fontWeight: '300',
     marginBottom: 8,
   },
@@ -346,8 +346,8 @@ const s = StyleSheet.create({
     elevation: 8,
   },
   btnAccept: {
-    backgroundColor: '#10B981',
-    shadowColor: '#10B981',
+    backgroundColor: '#F28C82',
+    shadowColor: '#F28C82',
   },
   btnDecline: {
     backgroundColor: '#EF4444',
@@ -355,6 +355,6 @@ const s = StyleSheet.create({
   },
   btnIcon: {
     fontSize: 28,
-    color: 'white',
+    color: '#F5E6D3',
   },
 });

@@ -11,7 +11,9 @@
     "lint": "expo lint",
     "setup:framework": "node scripts/setup-framework.js",
     "migrate:feature": "node scripts/migrate-feature.js",
-    "test": "jest"
+    "test": "jest",
+    "security-check": "node scripts/security-check.js",
+    "pre-commit": "node scripts/security-check.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -28,6 +30,7 @@
     "expo-camera": "~17.0.10",
     "expo-constants": "~18.0.13",
     "expo-crypto": "~15.0.9",
+    "expo-dev-client": "~6.0.21",
     "expo-file-system": "~19.0.22",
     "expo-font": "~14.0.11",
     "expo-haptics": "~15.0.8",

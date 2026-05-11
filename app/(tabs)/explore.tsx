@@ -30,18 +30,18 @@ export default function ExploreScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#080810' },
+  container: { flex: 1, backgroundColor: '#3A1F28' },
   header: { padding: 20 },
-  title: { color: 'white', fontSize: 20, fontWeight: '600' },
-  subtitle: { color: 'rgba(255,255,255,0.3)', fontSize: 12, marginTop: 4 },
+  title: { color: '#F5E6D3', fontSize: 20, fontWeight: '600' },
+  subtitle: { color: '#F2EDE8', fontSize: 12, marginTop: 4 },
   card: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     marginHorizontal: 20, marginBottom: 10, padding: 16,
-    backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 14,
-    borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: '#6D3B4B', borderRadius: 14,
+    borderWidth: 0.5, borderColor: '#8B6F74',
   },
   cardIcon: { fontSize: 28 },
   cardInfo: { flex: 1 },
-  cardTitle: { color: 'white', fontSize: 15, fontWeight: '500' },
-  cardDesc: { color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 4 },
+  cardTitle: { color: '#F5E6D3', fontSize: 15, fontWeight: '500' },
+  cardDesc: { color: '#D8A46B', fontSize: 12, marginTop: 4 },
 });

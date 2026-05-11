@@ -1,5 +1,15 @@
 /**
  * SOS / Emergency Routes — /trigger-sos, /smart-emergency, /sensor/*
+ * 
+ * FUTURE_SCOPE: This module will be enhanced with:
+ * - Integration with IoT panic buttons and wearable devices
+ * - Automatic SOS trigger from health monitoring (fall detection, abnormal vitals)
+ * - Satellite communication fallback for remote areas
+ * - Video streaming during SOS (WebRTC)
+ * - AI-powered false positive detection
+ * - Integration with local emergency services (911, 112)
+ * - Blockchain-based evidence chain of custody
+ * - Multi-language emergency phrase detection
  */
 const express = require("express");
 const router  = express.Router();
@@ -9,6 +19,12 @@ module.exports = function(middlewares, io) {
   const { requireAuth, requireSelfOrAdmin } = middlewares;
 
   // ── Sensor routes ────────────────────────────────────────────────────────
+  // FUTURE_SCOPE: Enhanced sensor integration with:
+  // - Wearable device sensors (smartwatch accelerometer, heart rate)
+  // - IoT environmental sensors (door sensors, motion detectors)
+  // - Vehicle telematics (crash detection, sudden braking)
+  // - Biometric sensors (stress detection, panic attack prediction)
+  // - Computer vision (suspicious activity detection from camera feeds)
 
   router.post("/sensor/shake", requireAuth, requireSelfOrAdmin, async (req, res) => {
     try {

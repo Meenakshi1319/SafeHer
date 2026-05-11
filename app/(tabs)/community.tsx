@@ -65,18 +65,18 @@ export default function CommunityScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a12',
+    backgroundColor: '#3A1F28',
   },
   header: {
     padding: 20,
   },
   title: {
-    color: 'white',
+    color: '#F5E6D3',
     fontSize: 20,
     fontWeight: '500',
   },
   subtitle: {
-    color: 'rgba(255,255,255,0.3)',
+    color: '#F2EDE8',
     fontSize: 12,
     marginTop: 4,
   },
@@ -88,20 +88,20 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: '#6D3B4B',
     borderWidth: 0.5,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: '#8B6F74',
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
   },
   statValue: {
-    color: '#e05a7a',
+    color: '#E66A6A',
     fontSize: 18,
     fontWeight: '600',
   },
   statLabel: {
-    color: 'rgba(255,255,255,0.4)',
+    color: '#D8A46B',
     fontSize: 10,
     marginTop: 4,
     textAlign: 'center',
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   listTitle: {
-    color: 'rgba(255,255,255,0.4)',
+    color: '#D8A46B',
     fontSize: 11,
     letterSpacing: 1,
     marginBottom: 4,
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#111120',
     borderWidth: 0.5,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: '#8B6F74',
     borderRadius: 14,
     padding: 14,
     gap: 12,
@@ -140,17 +140,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   volName: {
-    color: 'white',
+    color: '#F5E6D3',
     fontSize: 14,
     fontWeight: '500',
   },
   volRole: {
-    color: 'rgba(255,255,255,0.4)',
+    color: '#D8A46B',
     fontSize: 11,
     marginTop: 2,
   },
   volDist: {
-    color: '#e05a7a',
+    color: '#E66A6A',
     fontSize: 11,
     marginTop: 4,
   },
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   volRating: {
-    color: 'rgba(255,255,255,0.5)',
+    color: '#F2EDE8',
     fontSize: 11,
   },
   callBtn: {
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   callText: {
-    color: '#e05a7a',
+    color: '#E66A6A',
     fontSize: 11,
   },
 });

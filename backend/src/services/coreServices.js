@@ -79,11 +79,37 @@ function generateLocationLink(lat, lng) {
 
 async function sendSMS(to, message) {
   try {
-    if (!twilioClient) throw new Error("Twilio client not initialized");
-    await twilioClient.messages.create({ body: message, from: TWILIO_PHONE, to });
+    logEvent("INFO", "📱 [SMS] Attempting to send SMS", { to, messageLength: message.length });
+    
+    if (!twilioClient) {
+      logEvent("ERROR", "❌ [SMS] Twilio client not initialized");
+      throw new Error("Twilio client not initialized");
+    }
+    
+    if (!TWILIO_PHONE) {
+      logEvent("ERROR", "❌ [SMS] TWILIO_PHONE not configured");
+      throw new Error("TWILIO_PHONE not configured");
+    }
+    
+    logEvent("INFO", "📤 [SMS] Sending via Twilio", { from: TWILIO_PHONE, to });
+    
+    const result = await twilioClient.messages.create({ body: message, from: TWILIO_PHONE, to });
+    
     logEvent("SMS", `✅ Sent to ${to}`);
+    logEvent("INFO", "✅ [SMS] SMS sent successfully", { 
+      to, 
+      sid: result.sid,
+      status: result.status
+    });
   } catch (err) {
-    logEvent("ERROR", `❌ SMS failed to ${to}`, { error: err.message });
+    logEvent("ERROR", `❌ SMS failed to ${to}`, { error: err.message, code: err.code, moreInfo: err.moreInfo });
+    logEvent("ERROR", "❌ [SMS] Detailed error", { 
+      to,
+      errorMessage: err.message,
+      errorCode: err.code,
+      errorStatus: err.status,
+      errorDetails: err.moreInfo
+    });
   }
 }
 
@@ -132,9 +158,26 @@ function filterContactsByType(contacts, allowedTypes) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 async function dispatchByRiskLevel(uid, riskLevel, reason, score, location) {
-  if (riskLevel.label === "LOW") return;
+  logEvent("INFO", "📤 [SMS] dispatchByRiskLevel called", { 
+    uid, 
+    riskLevel: riskLevel.label, 
+    reason, 
+    score,
+    location 
+  });
+
+  if (riskLevel.label === "LOW") {
+    logEvent("INFO", "⚠️ [SMS] Risk level is LOW - no SMS dispatch");
+    return;
+  }
 
   const contacts     = await getContacts(uid);
+  logEvent("INFO", "📋 [SMS] Fetched contacts", { 
+    uid, 
+    totalContacts: contacts.length,
+    contactTypes: contacts.map(c => c.type)
+  });
+
   const locationLink = generateLocationLink(location?.lat, location?.lng);
 
   let allowedTypes = [];
@@ -144,8 +187,20 @@ async function dispatchByRiskLevel(uid, riskLevel, reason, score, location) {
     case "VERY HIGH": allowedTypes = ["family", "trusted", "volunteer", "ngo", "police", "emergency"]; break;
   }
 
+  logEvent("INFO", "🎯 [SMS] Allowed contact types for risk level", { 
+    riskLevel: riskLevel.label, 
+    allowedTypes 
+  });
+
   const targets = filterContactsByType(contacts, allowedTypes);
+  logEvent("INFO", "👥 [SMS] Filtered target contacts", { 
+    totalTargets: targets.length,
+    targetNames: targets.map(c => c.name),
+    targetPhones: targets.map(c => c.phone)
+  });
+
   if (targets.length === 0) {
+    logEvent("WARN", `⚠️ [SMS] No contacts of types [${allowedTypes}] found for ${uid}`);
     logEvent("DISPATCH", `No contacts of types [${allowedTypes}] found for ${uid}`);
     return;
   }
@@ -155,7 +210,25 @@ async function dispatchByRiskLevel(uid, riskLevel, reason, score, location) {
     ? `🤫 SAFEHER STEALTH ALERT\nUser is in a decoy mode. DO NOT call them back! Monitor silently.\nRisk: ${riskLevel.label} (${score}/100)\nLoc: ${locationLink}`
     : `${riskLevel.emoji} SAFEHER ALERT\nRisk Level : ${riskLevel.label} (${score}/100)\nReason     : ${reason}\nLocation   : ${locationLink}\nPlease respond immediately!`;
 
-  await Promise.allSettled(targets.map((c) => sendSMS(c.phone, smsBody)));
+  logEvent("INFO", "📝 [SMS] SMS message prepared", { 
+    messageLength: smsBody.length,
+    stealthMode: session.stealthMode,
+    preview: smsBody.substring(0, 50) + '...'
+  });
+
+  logEvent("INFO", "📤 [SMS] Sending SMS to targets...", { count: targets.length });
+  
+  const results = await Promise.allSettled(targets.map((c) => sendSMS(c.phone, smsBody)));
+  
+  const successful = results.filter(r => r.status === 'fulfilled').length;
+  const failed = results.filter(r => r.status === 'rejected').length;
+  
+  logEvent("INFO", "✅ [SMS] SMS dispatch complete", { 
+    total: targets.length,
+    successful,
+    failed
+  });
+
   logEvent("DISPATCH", `SMS sent to ${targets.length} contacts`, { uid, riskLevel: riskLevel.label, types: allowedTypes, stealthMode: session.stealthMode });
 }
 
@@ -168,18 +241,33 @@ async function dispatchByRiskLevel(uid, riskLevel, reason, score, location) {
  * controller/server so this service stays transport-agnostic.
  */
 async function triggerEmergency(uid, reason, score, location, io) {
+  logEvent("INFO", "🚨 [EMERGENCY] triggerEmergency called", { 
+    uid, 
+    reason, 
+    score, 
+    location 
+  });
+
   const riskLevel = getRiskLevel(score);
+  logEvent("INFO", "📊 [EMERGENCY] Risk level calculated", { 
+    score, 
+    riskLevel: riskLevel.label,
+    emoji: riskLevel.emoji
+  });
 
   await saveAlert(uid, `🚨 Emergency: ${reason}`, score, "emergency");
 
   if (db) {
     await db.collection("globalAlerts").add({
       uid, reason, riskScore: score, riskLevel: riskLevel.label,
-      latitude: location?.lat || null, longitude: location?.lng || null,
+      latitude: location?.lat || location?.latitude || null, 
+      longitude: location?.lng || location?.longitude || null,
       timestamp: new Date(),
     });
+    logEvent("INFO", "💾 [EMERGENCY] Global alert saved to Firestore");
   }
 
+  logEvent("INFO", "📤 [EMERGENCY] Calling dispatchByRiskLevel...");
   await dispatchByRiskLevel(uid, riskLevel, reason, score, location);
 
   io.to(`user:${uid}`).emit("sos_alert", { uid, reason, score, riskLevel: riskLevel.label, emoji: riskLevel.emoji, location, timestamp: new Date() });
@@ -191,6 +279,7 @@ async function triggerEmergency(uid, reason, score, location, io) {
   }
 
   logEvent("EMERGENCY", `Triggered for ${uid}`, { reason, score, riskLevel: riskLevel.label });
+  logEvent("INFO", "✅ [EMERGENCY] triggerEmergency complete");
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

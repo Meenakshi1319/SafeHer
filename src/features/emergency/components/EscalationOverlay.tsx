@@ -98,7 +98,7 @@ const eb = StyleSheet.create({
     justifyContent:  'center',
   },
   safeBtn: {
-    backgroundColor: '#10b981',
+    backgroundColor: '#F28C82',
     borderRadius:    16,
     paddingVertical: 18,
     paddingHorizontal: 40,
@@ -107,7 +107,7 @@ const eb = StyleSheet.create({
     minWidth:        44,
   },
   safeBtnText: {
-    color:      '#fff',
+    color: '#F5E6D3',
     fontSize:   18,
     fontWeight: '700',
   },
@@ -393,7 +393,7 @@ export default function SOSEscalationOverlay() {
 const s = StyleSheet.create({
   overlay: {
     flex:            1,
-    backgroundColor: 'rgba(0,0,0,0.95)',
+    backgroundColor: '#1B1620',
     alignItems:      'center',
     justifyContent:  'center',
   },
@@ -412,9 +412,9 @@ const s = StyleSheet.create({
     width:           320,
     height:          320,
     borderRadius:    160,
-    backgroundColor: 'rgba(255, 30, 30, 0.18)',
+    backgroundColor: '#6D3B4B',
     borderWidth:     2,
-    borderColor:     'rgba(255, 30, 30, 0.4)',
+    borderColor: '#8B6F74',
   },
 
   contentWrapper: {
@@ -424,7 +424,7 @@ const s = StyleSheet.create({
   },
 
   titleWarning: {
-    color:         '#ff3b3b',
+    color: '#E66A6A',
     fontSize:      26,
     fontWeight:    '800',
     letterSpacing: 1,
@@ -433,14 +433,14 @@ const s = StyleSheet.create({
   },
 
   subtitle: {
-    color:        'rgba(255,255,255,0.75)',
+    color: '#F2EDE8',
     fontSize:     15,
     textAlign:    'center',
     marginBottom: 20,
   },
 
   countdown: {
-    color:        '#ff3b3b',
+    color: '#E66A6A',
     fontSize:     80,
     fontWeight:   '900',
     lineHeight:   88,
@@ -450,7 +450,7 @@ const s = StyleSheet.create({
   progressTrack: {
     width:           '80%',
     height:          6,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: '#6D3B4B',
     borderRadius:    3,
     overflow:        'hidden',
     marginBottom:    20,
@@ -458,12 +458,12 @@ const s = StyleSheet.create({
 
   progressFill: {
     height:          '100%',
-    backgroundColor: '#ff3b3b',
+    backgroundColor: '#E66A6A',
     borderRadius:    3,
   },
 
   instruction: {
-    color:         'rgba(255,255,255,0.45)',
+    color: '#D8A46B',
     fontSize:      12,
     textAlign:     'center',
     marginBottom:  28,
@@ -472,13 +472,13 @@ const s = StyleSheet.create({
 
   safeBtn: {
     width:           '85%',
-    backgroundColor: '#10b981',
+    backgroundColor: '#F28C82',
     borderRadius:    16,
     paddingVertical: 18,
     alignItems:      'center',
     marginBottom:    14,
     minHeight:       44,
-    shadowColor:     '#10b981',
+    shadowColor: '#F28C82',
     shadowOffset:    { width: 0, height: 4 },
     shadowOpacity:   0.45,
     shadowRadius:    12,
@@ -486,7 +486,7 @@ const s = StyleSheet.create({
   },
 
   safeBtnText: {
-    color:         '#fff',
+    color: '#F5E6D3',
     fontSize:      18,
     fontWeight:    '700',
     letterSpacing: 0.5,
@@ -495,13 +495,13 @@ const s = StyleSheet.create({
   // "I AM UNSAFE" — solid red, white bold text, min 44×44 dp (Req 3.4, 4.2)
   unsafeBtn: {
     width:           '85%',
-    backgroundColor: '#E53935',
+    backgroundColor: '#E66A6A',
     borderRadius:    16,
     paddingVertical: 18,
     alignItems:      'center',
     marginBottom:    14,
     minHeight:       44,
-    shadowColor:     '#E53935',
+    shadowColor: '#E66A6A',
     shadowOffset:    { width: 0, height: 4 },
     shadowOpacity:   0.45,
     shadowRadius:    12,
@@ -509,7 +509,7 @@ const s = StyleSheet.create({
   },
 
   unsafeBtnText: {
-    color:         '#fff',
+    color: '#F5E6D3',
     fontSize:      18,
     fontWeight:    '700',
     letterSpacing: 0.5,
@@ -524,7 +524,7 @@ const s = StyleSheet.create({
   },
 
   titleEscalated: {
-    color:         '#ff4d79',
+    color: '#E66A6A',
     fontSize:      24,
     fontWeight:    '800',
     letterSpacing: 1,
@@ -533,7 +533,7 @@ const s = StyleSheet.create({
   },
 
   escalatedBody: {
-    color:        'rgba(255,255,255,0.8)',
+    color: '#F2EDE8',
     fontSize:     16,
     textAlign:    'center',
     lineHeight:   26,
