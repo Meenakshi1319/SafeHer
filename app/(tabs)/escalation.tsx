@@ -9,8 +9,8 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { apiGet, apiPost } from '../../services/api';
-import { auth } from '../../services/firebase';
+import { apiGet, apiPost } from '@core/api/client';
+import { auth } from '@core/firebase';
 
 type AlertItem = {
   id: string;

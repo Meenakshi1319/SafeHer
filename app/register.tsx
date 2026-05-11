@@ -13,8 +13,8 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { apiPost } from "../services/api";
-import { auth } from "../services/firebase";
+import { apiPost } from '@core/api/client';
+import { auth } from '@core/firebase';
 
 export default function RegisterScreen() {
   const [name, setName] = useState('');

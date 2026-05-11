@@ -10,9 +10,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Circle } from 'react-native-maps';
+import MapViewDirections from 'react-native-maps-directions';
 import * as Location from 'expo-location';
-import { apiPost } from '../../services/api';
-import { auth } from '../../services/firebase';
+import { apiPost, apiGet } from '@core/api/client';
+
+const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || 'MOCK_KEY';
+import { auth } from '@core/firebase';
 
 const riskLevels = [
   { risk: 'High Risk', color: '#ff4d79', icon: '🔴' },
@@ -60,6 +63,8 @@ export default function MapScreen() {
   const [cityName, setCityName] = useState('Locating...');
   const [dangerZones, setDangerZones] = useState<any[]>([]);
   const [safeRoutes, setSafeRoutes] = useState<any[]>([]);
+  const [heatmapData, setHeatmapData] = useState<any[]>([]);
+  const [destinationCoords, setDestinationCoords] = useState<{latitude: number, longitude: number} | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -70,6 +75,16 @@ export default function MapScreen() {
       }
       let loc = await Location.getCurrentPositionAsync({});
       setLocation(loc);
+
+      // Fetch Real-time Heatmap
+      try {
+        const heatRes = await apiGet('/location/heatmap');
+        if (heatRes.success && heatRes.data) {
+          setHeatmapData(heatRes.data);
+        }
+      } catch (err) {
+        console.log('Heatmap fetch error:', err);
+      }
 
       // Reverse geocode to get actual city name
       try {
@@ -117,15 +132,7 @@ export default function MapScreen() {
       }
       setDangerZones(zones);
 
-      // Build dynamic safe routes using first 3 zone names
-      const routeNames = zones.slice(0, 3).map(z => z.area);
-      const routeDestination = routeNames[0];
-      setSafeRoutes([
-        { from: 'Current Location', to: routeDestination, time: '18 mins', safety: 'Safe', color: '#10b981', via: `via ${routeNames[2] || 'Main Road'}` },
-        { from: 'Current Location', to: routeDestination, time: '12 mins', safety: 'Moderate', color: '#f0a500', via: `via ${routeNames[1] || 'Highway'}` },
-        { from: 'Current Location', to: routeDestination, time: '10 mins', safety: 'Risky', color: '#ff4d79', via: `via ${routeNames[0] || 'Shortcut'}` },
-      ]);
-
+      // We no longer build dummy safeRoutes here. It happens in handleSearch.
       const uid = auth.currentUser?.uid;
       if (uid) {
         apiPost('/save-location', {
@@ -137,11 +144,48 @@ export default function MapScreen() {
     })();
   }, []);
 
-  function handleSearch() {
+  async function handleSearch() {
     if (!destination.trim()) {
       Alert.alert('Enter Destination', 'Please enter where you want to go!');
       return;
     }
+    
+    // Convert destination string to coordinates
+    let destCoords = { latitude: location?.coords.latitude! + 0.05, longitude: location?.coords.longitude! + 0.05 };
+    try {
+      const geocodeResult = await Location.geocodeAsync(destination);
+      if (geocodeResult.length > 0) {
+        destCoords = { latitude: geocodeResult[0].latitude, longitude: geocodeResult[0].longitude };
+      }
+    } catch (e) {
+      console.log('Geocoding error:', e);
+    }
+    setDestinationCoords(destCoords);
+    
+    try {
+      const uid = auth.currentUser?.uid || 'guest';
+      const routeRes = await apiPost('/location/safe-route', {
+        uid,
+        start: { latitude: location?.coords.latitude || 0, longitude: location?.coords.longitude || 0 },
+        end: destCoords
+      });
+      
+      if (routeRes.success && routeRes.route) {
+        // Map the backend route format to UI format
+        setSafeRoutes([
+          { from: 'Current Location', to: destination, time: routeRes.route.duration, safety: 'Safe', color: '#10b981', via: `via ${dangerZones[2]?.area || 'Main Road'}`, distance: routeRes.route.distance },
+          { from: 'Current Location', to: destination, time: '12 mins', safety: 'Moderate', color: '#f0a500', via: `via ${dangerZones[1]?.area || 'Highway'}` },
+          { from: 'Current Location', to: destination, time: '10 mins', safety: 'Risky', color: '#ff4d79', via: `via ${dangerZones[0]?.area || 'Shortcut'}` },
+        ]);
+      }
+    } catch (err) {
+      console.log('Safe route fetch error:', err);
+      // Fallback
+      setSafeRoutes([
+        { from: 'Current Location', to: destination, time: '18 mins', safety: 'Safe', color: '#10b981', via: `via Main Road` },
+      ]);
+    }
+    
     setShowRoutes(true);
   }
 
@@ -240,18 +284,26 @@ export default function MapScreen() {
                 }}
                 showsUserLocation={true}
               >
-                <Circle
-                  center={{ latitude: location.coords.latitude + 0.01, longitude: location.coords.longitude + 0.01 }}
-                  radius={800}
-                  fillColor="rgba(255, 77, 121, 0.3)"
-                  strokeColor="rgba(255, 77, 121, 0.8)"
-                />
-                <Circle
-                  center={{ latitude: location.coords.latitude - 0.01, longitude: location.coords.longitude - 0.01 }}
-                  radius={1000}
-                  fillColor="rgba(240, 165, 0, 0.3)"
-                  strokeColor="rgba(240, 165, 0, 0.8)"
-                />
+                {heatmapData.map((point, i) => (
+                  <Circle
+                    key={i}
+                    center={{ latitude: point.latitude, longitude: point.longitude }}
+                    radius={point.intensity * 1000} // radius based on intensity
+                    fillColor={`rgba(255, 77, 121, ${point.intensity * 0.5})`}
+                    strokeColor={`rgba(255, 77, 121, ${point.intensity})`}
+                  />
+                ))}
+
+                {showRoutes && location && destinationCoords && (
+                  <MapViewDirections
+                    origin={{ latitude: location.coords.latitude, longitude: location.coords.longitude }}
+                    destination={destinationCoords}
+                    apikey={GOOGLE_MAPS_APIKEY}
+                    strokeWidth={4}
+                    strokeColor="#10b981"
+                    optimizeWaypoints={true}
+                  />
+                )}
               </MapView>
             ) : (
               <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>

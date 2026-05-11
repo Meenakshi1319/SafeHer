@@ -8,7 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import VoiceHelper from '../../services/shVoiceTriggerAI';
+import VoiceHelper from '@features/ai/services/voiceTrigger';
 
 export default function VoiceTestScreen() {
   const [isListening, setIsListening] = useState(false);

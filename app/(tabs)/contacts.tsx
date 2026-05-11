@@ -14,8 +14,8 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { apiDelete, apiGet, apiPost } from '../../services/api';
-import { auth } from '../../services/firebase';
+import { apiDelete, apiGet, apiPost } from '@core/api/client';
+import { auth } from '@core/firebase';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);

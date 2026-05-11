@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { apiPost } from '../../services/api';
+import { apiPost } from '@core/api/client';
 
 type Message = {
   id: string;

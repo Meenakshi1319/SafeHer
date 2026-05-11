@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { apiGet, apiPost } from '../../services/api';
-import { auth } from '../../services/firebase';
+import { apiGet, apiPost } from '@core/api/client';
+import { auth } from '@core/firebase';
 
 export default function RiskScreen() {
   const [score, setScore] = useState(0);

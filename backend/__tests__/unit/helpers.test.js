@@ -161,7 +161,7 @@ describe("getSession()", () => {
 
   test("creates a new session for unknown uid", () => {
     const session = getSession("new-user-abc");
-    expect(session).toEqual({ riskScore: 0, alerts: [], socketId: null });
+    expect(session).toEqual({ riskScore: 0, alerts: [], socketId: null, stealthMode: false });
   });
 
   test("returns existing session for known uid", () => {

@@ -5,8 +5,9 @@ import {
     useAudioRecorder,
 } from 'expo-audio';
 import * as Location from 'expo-location';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+    ActivityIndicator,
     Alert,
     Animated,
     ScrollView,
@@ -17,44 +18,76 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { io } from 'socket.io-client';
-import { useShakeDetector } from '../../hooks/useShakeDetector';
-import { BASE_URL, apiPost } from '../../services/api';
-import { auth } from '../../services/firebase';
+import { useShakeDetector } from '@features/ai/hooks/useShakeDetector';
+import { BASE_URL, apiGet } from '@core/api/client';
+import { auth } from '@core/firebase';
 
-import { syncRiskScore } from '../../services/shRiskScoreService';
-import VoiceHelper from '../../services/shVoiceTriggerAI';
+import { syncRiskScore } from '@features/risk-assessment/services';
+import VoiceHelper from '@features/ai/services/voiceTrigger';
+import { useSOSAction } from '@features/emergency/hooks/useSOSAction';
 
-const evidenceData = [
-  { id: '1', type: '🎥', title: 'Video Recording', date: 'Today 10:32 PM', size: '12.4 MB' },
-  { id: '2', type: '🎙️', title: 'Audio Recording', date: 'Today 10:31 PM', size: '2.1 MB' },
-  { id: '3', type: '📍', title: 'Location Log', date: 'Today 10:30 PM', size: '0.3 MB' },
-  { id: '4', type: '🎥', title: 'Video Recording', date: 'Yesterday 11:20 PM', size: '8.7 MB' },
-];
+/** Maps a raw recording doc from the API into the shape the Evidence Vault UI expects. */
+function formatRecording(rec: any) {
+  const isVideo = (rec.type || rec.mimeType || '').includes('video');
+  const isLocation = (rec.type || '').includes('location');
+  const icon = isLocation ? '📍' : isVideo ? '🎥' : '🎙️';
+  const title = rec.reason || rec.fileName || (isVideo ? 'Video Recording' : 'Audio Recording');
+
+  let date = '';
+  if (rec.createdAt) {
+    // Firestore timestamps come as { _seconds, _nanoseconds } or ISO strings
+    const d = rec.createdAt._seconds
+      ? new Date(rec.createdAt._seconds * 1000)
+      : new Date(rec.createdAt);
+    date = d.toLocaleString();
+  }
+
+  const size = rec.size ? `${(rec.size / (1024 * 1024)).toFixed(1)} MB` : 'Synced';
+
+  return { id: rec.id || rec.fileName || String(Math.random()), type: icon, title, date, size, hash: rec.evidenceHash };
+}
 
 export default function SOSScreen() {
-  const [sosActive, setSosActive] = useState(false);
   const [showVault, setShowVault] = useState(false);
-  const [recordings, setRecordings] = useState(evidenceData);
-  const [recordingStatus, setRecordingStatus] = useState('');
+  const [recordings, setRecordings] = useState<any[]>([]);
+  const [loadingVault, setLoadingVault] = useState(false);
   const [shakeProgress, setShakeProgress] = useState(0);
-  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+
+  /** Fetches recordings from the backend API */
+  const fetchRecordings = useCallback(async () => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+    try {
+      setLoadingVault(true);
+      const res = await apiGet(`/recordings/${uid}`);
+      if (res.success && Array.isArray(res.recordings)) {
+        setRecordings(res.recordings.map(formatRecording));
+      }
+    } catch (err) {
+      console.log('[EvidenceVault] Failed to fetch recordings:', err);
+    } finally {
+      setLoadingVault(false);
+    }
+  }, []);
+
+  const { triggerSOS, sosActive, recordingStatus, cleanup } = useSOSAction(fetchRecordings);
 
   useShakeDetector(() => {
     if (!sosActive) {
-      handleSOS();
+      triggerSOS();
     }
   }, (count) => setShakeProgress(count), !sosActive);
   const pulse1 = useRef(new Animated.Value(1)).current;
   const pulse2 = useRef(new Animated.Value(1)).current;
   const pulse3 = useRef(new Animated.Value(1)).current;
-  const sosTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const statusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mountedRef = useRef(true);
   const pulseLoopsRef = useRef<Animated.CompositeAnimation[]>([]);
 
   useEffect(() => {
     const uid = auth.currentUser?.uid;
     if (!uid) return;
+
+    // Fetch recordings from the real API on mount
+    fetchRecordings();
 
     const socket = io(BASE_URL);
 
@@ -72,14 +105,17 @@ export default function SOSScreen() {
       console.log('Remote SOS Alert:', data);
     });
 
+    // Refresh vault when new evidence is uploaded (from any source)
+    socket.on('evidence_uploaded', () => {
+      fetchRecordings();
+    });
+
     // Start AI Protection Sensors
     syncRiskScore();
     VoiceHelper.startListening();
 
     return () => {
-      mountedRef.current = false;
-      if (sosTimeoutRef.current) clearTimeout(sosTimeoutRef.current);
-      if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
+      cleanup();
       socket.disconnect();
       VoiceHelper.stopListening();
     };
@@ -115,105 +151,6 @@ export default function SOSScreen() {
     };
   }, [pulse1, pulse2, pulse3]);
 
-  async function handleSOS() {
-    if (sosActive) return;
-    setSosActive(true);
-    setRecordingStatus('🔴 Recording audio & getting location...');
-
-    Alert.alert(
-      '🚨 SOS Activated!',
-      '✅ Secret audio recording started\n✅ Location tracked\n✅ Will upload to Firebase Evidence Vault in 10s',
-      [{ text: 'OK' }]
-    );
-
-    try {
-      let { status: locStatus } = await Location.requestForegroundPermissionsAsync();
-      let locationObj = null;
-      if (locStatus === 'granted') {
-        locationObj = await Location.getCurrentPositionAsync({});
-      }
-
-      const micStatus = await requestRecordingPermissionsAsync();
-      if (!micStatus.granted) {
-        setSosActive(false);
-        setRecordingStatus('Microphone permission denied');
-        return;
-      }
-
-      await setAudioModeAsync({
-        allowsRecording: true,
-        playsInSilentMode: true,
-      });
-
-      await audioRecorder.prepareToRecordAsync();
-      audioRecorder.record();
-
-      sosTimeoutRef.current = setTimeout(async () => {
-        await audioRecorder.stop();
-        const uri = audioRecorder.uri;
-        if (!mountedRef.current) return;
-        setRecordingStatus('🔄 Uploading evidence to Cloud Vault...');
-
-        let fileName = '';
-        const uid = auth.currentUser?.uid || 'unknown';
-
-        if (uri) {
-          const token = await auth.currentUser?.getIdToken();
-          const formData = new FormData();
-          formData.append('uid', uid);
-          formData.append('type', 'audio');
-          formData.append('reason', 'SOS Audio Recording');
-          formData.append('file', {
-            uri,
-            name: `audio_${Date.now()}.m4a`,
-            type: 'audio/m4a',
-          } as any);
-
-          const res = await fetch(`${BASE_URL}/upload-evidence`, {
-            method: 'POST',
-            body: formData,
-            headers: {
-              'Accept': 'application/json',
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-          });
-          
-          const result = await res.json();
-          if (result.success) {
-            fileName = result.fileName;
-          }
-        }
-
-        await apiPost('/trigger-sos', {
-          uid,
-          reason: 'Emergency Auto-Trigger',
-          riskScore: 100,
-          location: locationObj ? { lat: locationObj.coords.latitude, lng: locationObj.coords.longitude } : null
-        });
-
-        setRecordings(prev => [
-          {
-            id: fileName || Date.now().toString(),
-            type: '🎙️',
-            title: 'Emergency Audio (Backend)',
-            date: new Date().toLocaleTimeString(),
-            size: 'Synced',
-          },
-          ...prev
-        ]);
-
-        if (!mountedRef.current) return;
-        setRecordingStatus('✅ Evidence securely saved to Firebase.');
-        statusTimeoutRef.current = setTimeout(() => {
-          if (mountedRef.current) setRecordingStatus('');
-        }, 4000);
-      }, 10000);
-
-    } catch (err) {
-      console.log('Firebase/Audio Error:', err);
-      setRecordingStatus('❌ Error saving evidence');
-    }
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -239,7 +176,7 @@ export default function SOSScreen() {
 
           <TouchableOpacity
             style={[styles.sosBtn, sosActive && styles.sosBtnActive]}
-            onPress={handleSOS}
+            onPress={triggerSOS}
             activeOpacity={0.8}
           >
             <Text style={styles.sosIcon}>🛡️</Text>
@@ -306,7 +243,11 @@ export default function SOSScreen() {
         <View style={styles.vaultSection}>
           <TouchableOpacity
             style={styles.vaultHeader}
-            onPress={() => setShowVault(!showVault)}
+            onPress={() => {
+              const willOpen = !showVault;
+              setShowVault(willOpen);
+              if (willOpen) fetchRecordings();
+            }}
           >
             <View style={styles.vaultLeft}>
               <Text style={styles.vaultIcon}>🔒</Text>
@@ -320,18 +261,29 @@ export default function SOSScreen() {
 
           {showVault && (
             <View style={styles.vaultList}>
-              {recordings.map((item) => (
+              {loadingVault ? (
+                <ActivityIndicator color="#ff4d79" style={{ paddingVertical: 20 }} />
+              ) : recordings.length === 0 ? (
+                <Text style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', paddingVertical: 20, fontSize: 13 }}>
+                  No recordings yet. Evidence will appear here after an SOS event.
+                </Text>
+              ) : (
+                recordings.map((item) => (
                 <View key={item.id} style={styles.vaultItem}>
                   <Text style={styles.vaultItemIcon}>{item.type}</Text>
                   <View style={styles.vaultItemInfo}>
                     <Text style={styles.vaultItemTitle}>{item.title}</Text>
                     <Text style={styles.vaultItemDate}>{item.date} • {item.size}</Text>
                   </View>
-                  <View style={styles.encryptedBadge}>
+                  <TouchableOpacity 
+                    style={styles.encryptedBadge}
+                    onPress={() => Alert.alert('Blockchain Evidence', `SHA-256 Signature:\n${item.hash || 'Verifying on-chain...'}`)}
+                  >
                     <Text style={styles.encryptedText}>🔐</Text>
-                  </View>
+                  </TouchableOpacity>
                 </View>
-              ))}
+                ))
+              )}
               <TouchableOpacity
                 style={styles.addEvidenceBtn}
                 onPress={() => Alert.alert('📁 Evidence Added', 'Your recording has been encrypted and saved to the vault.')}

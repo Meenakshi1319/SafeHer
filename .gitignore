@@ -36,7 +36,7 @@ yarn-error.*
 
 # backend secrets and runtime output
 backend/.env
-backend/serviceAccountKey.json
+**/serviceAccountKey.json
 backend/logs/
 backend/uploads/
 backend/coverage/

@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import MapView, { Circle, Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { apiGet, apiPost } from '../../services/api';
-import { auth } from '../../services/firebase';
+import { apiGet, apiPost } from '@core/api/client';
+import { auth } from '@core/firebase';
 
 type Contact = {
   id: string;
