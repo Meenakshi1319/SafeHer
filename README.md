@@ -345,13 +345,13 @@ These should not be presented as fully working production features at the curren
 
 # 👨‍💻 Team
 
-| Member    | Role                      |
-| --------- | ------------------------- |
-| Jahnavi   | Project Manager & Testing |
-| Meenakshi | UI/UX Developer           |
-| Mithra    | Backend Developer         |
-| Karthik   | Integration Developer     |
-| Dheemanth | AI Developer              |
+| Member    | Role                      | GitHub Profile Link                  |
+| --------- | ------------------------- | ------------------------------------ |
+| Jahnavi   | Project Manager & Testing | https://github.com/Jahnavi55561      |
+| Meenakshi | UI/UX Developer           | https://github.com/Meenakshi1319     |
+| Mithra    | Backend Developer         | https://github.com/Mithra65          |
+| Karthik   | Integration Developer     | https://github.com/karthikeyagod     |
+| Dheemanth | AI Developer              | https://github.com/DHEEMANTH241106   |
 
 ---
 
