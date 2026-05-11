@@ -2,7 +2,6 @@
 
 SafeHer is a React Native based women’s safety application focused on fast emergency response, intelligent alert triggering, and real time location sharing. The project combines sensor based detection, Firebase services, and emergency escalation workflows to improve personal safety during high risk situations.
 
-> This README has been aligned with the currently implemented codebase and architecture to avoid unsupported or unverified claims.
 
 ---
 
