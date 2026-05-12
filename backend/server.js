@@ -34,6 +34,14 @@ printFeatureStatus();
 // ── Shared dependencies (Firebase, Twilio, Gemini) ───────────────────────
 const { PORT, isOriginAllowed } = require("./src/config/dependencies");
 
+// ── Initialize AI Provider ────────────────────────────────────────────────
+const { getAIProvider } = require("./src/services/ai/AIProvider");
+const aiProvider = getAIProvider();
+
+// ── Initialize Blockchain Service ─────────────────────────────────────────
+const blockchainService = require("./src/services/blockchainService");
+blockchainService.initializeBlockchain();
+
 // ── Middleware ────────────────────────────────────────────────────────────
 const middlewares = require("./src/middleware/auth");
 
@@ -106,6 +114,7 @@ app.use(require("./src/api/controllers/locationController")(middlewares));
 app.use(require("./src/api/controllers/recordingController")(middlewares, io));
 app.use(require("./src/api/controllers/alertController")(middlewares));
 app.use(require("./src/api/controllers/aiController")(middlewares));
+app.use(require("./src/api/controllers/blockchainController")(middlewares));
 
 // ── Utility routes (kept inline — too small for a file) ──────────────────
 
@@ -119,12 +128,43 @@ app.get("/session/:uid", middlewares.requireAuth, middlewares.requireSelfOrAdmin
   });
 });
 
-app.get("/health", (req, res) => {
+app.get("/health", async (req, res) => {
+  // Get service statuses
+  const aiStatus = aiProvider.getStatus();
+  const blockchainStatus = blockchainService.getServiceStatus();
+  
+  // Determine overall health
+  const coreServicesHealthy = true; // Firebase, Express, Socket.io are running
+  const aiHealthy = aiStatus.available;
+  const blockchainHealthy = blockchainStatus.available;
+  
   res.status(200).json({
     status: "✅ SafeHer Backend is running",
     uptime: `${Math.floor(process.uptime())}s`,
     activeSessions: Object.keys(activeSessions).length,
     timestamp: new Date().toISOString(),
+    services: {
+      core: {
+        status: "operational",
+        features: ["authentication", "sos", "contacts", "location", "websocket"]
+      },
+      ai: {
+        status: aiHealthy ? "operational" : "degraded",
+        available: aiStatus.available,
+        model: aiStatus.model,
+        configured: aiStatus.configured,
+        fallback: !aiStatus.available ? "regex-based analysis" : null
+      },
+      blockchain: {
+        status: blockchainHealthy ? "operational" : "unavailable",
+        available: blockchainStatus.available,
+        initialized: blockchainStatus.initialized,
+        error: blockchainStatus.error,
+        network: blockchainStatus.configuration?.contractAddress ? "Polygon Mumbai" : null,
+        fallback: !blockchainHealthy ? "database-only storage" : null
+      }
+    },
+    overallHealth: coreServicesHealthy ? "healthy" : "degraded"
   });
 });
 

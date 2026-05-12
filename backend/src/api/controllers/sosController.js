@@ -69,10 +69,37 @@ module.exports = function(middlewares, io) {
 
   router.post("/trigger-sos", requireAuth, requireSelfOrAdmin, async (req, res) => {
     try {
-      const { uid, reason = "Emergency SOS", riskScore = 100, location = null } = req.body;
+      const { uid, reason = "Emergency SOS", riskScore = 100, location = null, message = null } = req.body;
       if (!uid) return res.status(400).json({ success: false, message: "uid is required" });
 
       logEvent("SOS", `🚨 SOS received from ${uid}`, { reason, riskScore });
+      
+      // AI-powered threat analysis if message provided
+      let aiAnalysis = null;
+      if (message) {
+        try {
+          const { getAIProvider } = require('../../services/ai/AIProvider');
+          const aiProvider = getAIProvider();
+          
+          if (aiProvider.checkAvailability()) {
+            aiAnalysis = await aiProvider.analyzeEmergencyMessage(message, {
+              location,
+              riskScore,
+              timestamp: new Date().toISOString()
+            });
+            
+            logEvent("INFO", "🤖 AI emergency analysis completed", {
+              severity: aiAnalysis.severity,
+              urgency: aiAnalysis.urgency,
+              estimatedRiskScore: aiAnalysis.estimatedRiskScore,
+              source: aiAnalysis.source
+            });
+          }
+        } catch (aiError) {
+          logEvent("WARN", "AI analysis failed, continuing with manual risk score", { error: aiError.message });
+        }
+      }
+      
       const riskLevel = getRiskLevel(riskScore);
       const session   = getSession(uid);
       session.riskScore = Math.min(riskScore, 100);
@@ -84,7 +111,20 @@ module.exports = function(middlewares, io) {
         logEvent("SOS", `LOW risk SOS — no external alerts dispatched for ${uid}`);
       }
 
-      res.status(200).json({ success: true, message: "SOS Triggered Successfully", alertLevel: riskLevel.label, emoji: riskLevel.emoji, startRecording: riskScore >= 61, vibration: true });
+      res.status(200).json({ 
+        success: true, 
+        message: "SOS Triggered Successfully", 
+        alertLevel: riskLevel.label, 
+        emoji: riskLevel.emoji, 
+        startRecording: riskScore >= 61, 
+        vibration: true,
+        aiAnalysis: aiAnalysis ? {
+          severity: aiAnalysis.severity,
+          urgency: aiAnalysis.urgency,
+          recommendedActions: aiAnalysis.recommendedActions,
+          source: aiAnalysis.source
+        } : null
+      });
     } catch (error) {
       logEvent("ERROR", "trigger-sos failed", { error: error.message });
       res.status(500).json({ success: false, message: error.message });
